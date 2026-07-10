@@ -8,8 +8,9 @@ import { byHeure, remiseMeta, REMISE_INDEFINIE } from '../utils/constants.js';
 const today = () => new Date().toISOString().slice(0, 10);
 
 // Page TABLES (Directeur) : attribution des tables.
-// Grille 2 colonnes. Bord de tuile = couleur de la remise.
-// Fond blanc -> vert clair une fois la table attribuée (+ badge n° table).
+// Classement PAR REMISE en 2 colonnes (brief d'origine) :
+//   gauche = -30%  ·  droite haut = -50%  ·  droite bas = Plein tarif
+// Tuiles-cartes : bord = couleur remise, fond vert + badge quand table posée.
 export default function Tables() {
   const { reservations, loading } = useReservations();
   const [date, setDate] = useState(today());
@@ -23,6 +24,10 @@ export default function Tables() {
         .sort(byHeure),
     [reservations, date, service]
   );
+
+  const g30 = validees.filter((r) => r.remise === '-30%');
+  const g50 = validees.filter((r) => r.remise === '-50%');
+  const gPlein = validees.filter((r) => r.remise === 'plein' || r.remise == null);
 
   const recap = useMemo(() => {
     const map = new Map();
@@ -42,38 +47,16 @@ export default function Tables() {
 
       {loading ? (
         <p className="muted">Chargement…</p>
-      ) : validees.length === 0 ? (
-        <p className="muted">Aucune réservation validée pour ce service.</p>
       ) : (
         <>
-          <div className="place-grid">
-            {validees.map((r) => {
-              const meta = remiseMeta(r.remise) || REMISE_INDEFINIE;
-              const placed = r.numero_table != null;
-              return (
-                <button
-                  key={r.id}
-                  className={`place-tile ${placed ? 'is-placed' : ''}`}
-                  style={{ borderColor: meta.color }}
-                  onClick={() => setPicked(r)}
-                >
-                  <div className="place-tile__top">
-                    <span className="place-tile__h">{r.heure}</span>
-                    {placed && (
-                      <span className="place-tile__badge">
-                        <TableIcon className="ic-sm" />
-                        {r.numero_table}
-                      </span>
-                    )}
-                  </div>
-                  <div className="place-tile__nom">{r.nom}</div>
-                  <div className="place-tile__cov">
-                    <CouvertIcon className="ic-sm" />
-                    {r.couverts} couv.
-                  </div>
-                </button>
-              );
-            })}
+          <div className="svc-grid">
+            <div className="svc-col-left">
+              <Zone title="Remise -30%" color="#4f46e5" resas={g30} onPick={setPicked} />
+            </div>
+            <div className="svc-col-right">
+              <Zone title="Remise -50%" color="#f97316" resas={g50} onPick={setPicked} />
+              <Zone title="Plein tarif" color="#06b6d4" resas={gPlein} onPick={setPicked} />
+            </div>
           </div>
 
           <div className="recap">
@@ -91,5 +74,49 @@ export default function Tables() {
 
       {picked && <ModalTable reservation={picked} onClose={() => setPicked(null)} />}
     </div>
+  );
+}
+
+function Zone({ title, color, resas, onPick }) {
+  return (
+    <div className="svc-case">
+      <div className="svc-case__head" style={{ borderColor: color, color }}>
+        {title} <span className="count">{resas.length}</span>
+      </div>
+      <div className="svc-case__body">
+        {resas.length === 0 ? (
+          <p className="muted small">—</p>
+        ) : (
+          resas.map((r) => <PlaceTile key={r.id} r={r} onPick={onPick} />)
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PlaceTile({ r, onPick }) {
+  const meta = remiseMeta(r.remise) || REMISE_INDEFINIE;
+  const placed = r.numero_table != null;
+  return (
+    <button
+      className={`place-tile ${placed ? 'is-placed' : ''}`}
+      style={{ borderColor: meta.color }}
+      onClick={() => onPick(r)}
+    >
+      <div className="place-tile__top">
+        <span className="place-tile__h">{r.heure}</span>
+        {placed && (
+          <span className="place-tile__badge">
+            <TableIcon className="ic-sm" />
+            {r.numero_table}
+          </span>
+        )}
+      </div>
+      <div className="place-tile__nom">{r.nom}</div>
+      <div className="place-tile__cov">
+        <CouvertIcon className="ic-sm" />
+        {r.couverts} couv.
+      </div>
+    </button>
   );
 }

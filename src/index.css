@@ -369,7 +369,11 @@ textarea.field__input { resize: vertical; }
   .page__title { font-size: 26px; }
 }
 
-/* Mobile étroit : tableau de service en 1 colonne empilée */
+/* Page Tables : 2 colonnes conservées même sur mobile (demande explicite).
+   Padding réduit des tuiles pour tenir dans les colonnes étroites. */
 @media (max-width: 520px) {
-  .svc-grid { grid-template-columns: 1fr; }
+  .svc-case__body { padding: 6px; }
+  .place-tile { padding: 10px; }
+  .place-tile__h { font-size: 15px; }
+  .place-tile__nom { font-size: 13.5px; }
 }
