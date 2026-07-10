@@ -39,12 +39,12 @@ export default function AppNav({ user, onNew }) {
         <nav className="sidebar__nav">{links}</nav>
       </aside>
 
-      {/* ---------- Mobile : bottom bar (+ à droite) ---------- */}
+      {/* ---------- Mobile : bottom bar (+ à gauche) ---------- */}
       <nav className="bottombar">
-        {links}
         <button className="bottombar__fab" onClick={onNew} aria-label="Nouvelle réservation">
           <PlusIcon className="bottombar__fabic" />
         </button>
+        {links}
       </nav>
     </>
   );
