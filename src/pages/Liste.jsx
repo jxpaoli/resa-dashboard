@@ -2,7 +2,7 @@ import { useMemo, useState, useRef, useEffect } from 'react';
 import { useReservations } from '../hooks/useReservations.js';
 import ModalEditResa from '../components/ModalEditResa.jsx';
 import { TableIcon, CouvertIcon } from '../components/icons.jsx';
-import { byHeure } from '../utils/constants.js';
+import { byHeure, remiseMeta, REMISE_INDEFINIE } from '../utils/constants.js';
 
 const pad = (n) => String(n).padStart(2, '0');
 const today = () => {
@@ -182,16 +182,24 @@ export default function Liste() {
 }
 
 function ResaRow({ r, onEdit }) {
+  const meta = remiseMeta(r.remise) || REMISE_INDEFINIE; // bordure = remise
+  const placed = r.numero_table != null;
   return (
-    <button className="agenda-row" onClick={() => onEdit(r)}>
-      <span className="agenda-row__h">{r.heure}</span>
-      <span className="agenda-row__nom">
-        {r.nom}{r.prenom ? ` ${r.prenom}` : ''}
+    <button
+      className={`agenda-row ${placed ? 'is-placed' : ''}`}
+      style={{ borderColor: meta.color }}
+      onClick={() => onEdit(r)}
+    >
+      <span className="agenda-row__evt">
+        {r.evenement && <span className="rbadge rbadge--evt">🎉</span>}
       </span>
-      {r.evenement && <span className="agenda-badge-evt">Événement</span>}
-      <span className="agenda-row__c"><CouvertIcon className="ic-sm" />{r.couverts}</span>
-      {r.numero_table != null && (
-        <span className="agenda-row__t"><TableIcon className="ic-sm" />{r.numero_table}</span>
+      <span className="agenda-row__h">{r.heure}</span>
+      <span className="agenda-row__nom">{r.nom}{r.prenom ? ` ${r.prenom}` : ''}</span>
+      <span className="rbadge rbadge--couv"><CouvertIcon className="ic-sm" />{r.couverts}</span>
+      {placed ? (
+        <span className="rbadge rbadge--table"><TableIcon className="ic-sm" />{String(r.numero_table).padStart(3, '0')}</span>
+      ) : (
+        <span className="rbadge rbadge--empty">—</span>
       )}
     </button>
   );

@@ -348,20 +348,26 @@ textarea.field__input { resize: vertical; }
 }
 .agenda-svc-sep { height: 1px; background: var(--border); margin: 12px 0; }
 
+/* Colonnes fixes → badges alignés d'une ligne à l'autre */
 .agenda-row {
-  display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
-  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-  padding: 11px 12px; margin-bottom: 8px; cursor: pointer; font-family: inherit; box-shadow: var(--shadow);
+  display: grid; grid-template-columns: 28px 44px 1fr 54px 62px;
+  align-items: center; gap: 8px; width: 100%; text-align: left;
+  background: var(--surface); border: 2px solid var(--border); border-radius: 12px;
+  padding: 10px 12px; margin-bottom: 8px; cursor: pointer; font-family: inherit; box-shadow: var(--shadow);
 }
+.agenda-row.is-placed { background: #ecfdf5; } /* table attribuée = vert clair (blanc sinon) */
 .agenda-row:active { transform: scale(.995); }
-.agenda-row__h { font-weight: 800; font-size: 15px; min-width: 46px; }
-.agenda-row__nom { flex: 1; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.agenda-row__c { display: inline-flex; align-items: center; gap: 3px; font-weight: 700; font-size: 13px; color: var(--ink-soft); }
-.agenda-row__t { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; font-size: 12px; background: #ecfeff; color: #0e7490; padding: 3px 8px; border-radius: 999px; }
-.agenda-badge-evt {
-  font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px;
-  background: #fbf3df; color: #9a7b1e; border: 1px solid var(--gold); white-space: nowrap;
+.agenda-row__evt { display: flex; justify-content: center; }
+.agenda-row__h { font-weight: 400; font-size: 14px; color: var(--ink-soft); }
+.agenda-row__nom { font-weight: 800; font-size: 17px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rbadge {
+  display: inline-flex; align-items: center; justify-content: center; gap: 3px; width: 100%;
+  font-weight: 800; font-size: 12.5px; padding: 3px 6px; border-radius: 999px;
 }
+.rbadge--couv { background: #f1ebdd; color: var(--ink); }
+.rbadge--table { background: #ecfeff; color: #0e7490; }
+.rbadge--empty { color: var(--muted); background: transparent; font-weight: 600; }
+.rbadge--evt { width: auto; background: #fbf3df; border: 1px solid var(--gold); padding: 2px 5px; font-size: 13px; }
 .weekday { text-transform: capitalize; color: var(--primary); font-weight: 700; }
 
 /* Toggle Événement */
