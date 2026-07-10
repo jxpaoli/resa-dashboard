@@ -7,7 +7,15 @@ import {
   serviceFromHeure, serviceLabel, REMISES, SLOTS_MIDI, SLOTS_SOIR, TIME_SLOTS,
 } from '../utils/constants.js';
 
-const today = () => new Date().toISOString().slice(0, 10);
+const pad = (n) => String(n).padStart(2, '0');
+const today = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+};
+const nowHM = () => {
+  const d = new Date();
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
 
 const empty = {
   civilite: '',
@@ -47,12 +55,24 @@ export default function FormulaireModal({ onClose }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
+  // Calcul en UTC pour éviter le décalage de fuseau (le + repartait au jour d'avant).
   const shiftDate = (delta) =>
     setForm((f) => {
-      const d = new Date((f.date || today()) + 'T00:00:00');
-      d.setDate(d.getDate() + delta);
-      return { ...f, date: d.toISOString().slice(0, 10) };
+      const [y, m, dd] = (f.date || today()).split('-').map(Number);
+      const dt = new Date(Date.UTC(y, m - 1, dd));
+      dt.setUTCDate(dt.getUTCDate() + delta);
+      let iso = dt.toISOString().slice(0, 10);
+      if (iso < today()) iso = today(); // pas de date passée
+      return { ...f, date: iso };
     });
+
+  // Créneaux : on masque ceux déjà passés si la date = aujourd'hui (service fini).
+  const isToday = form.date === today();
+  const slotOk = (t) => !isToday || t > nowHM();
+  const midiSlots = SLOTS_MIDI.filter(slotOk);
+  const soirSlots = SLOTS_SOIR.filter(slotOk);
+  const wideSlots = TIME_SLOTS.filter(slotOk);
+  const noSlotToday = isToday && (event ? wideSlots.length === 0 : midiSlots.length === 0 && soirSlots.length === 0);
 
   const touchCouverts = () => setForm((f) => (f.couverts === '' ? { ...f, couverts: '2' } : f));
   const stepCouverts = (delta) =>
@@ -65,6 +85,14 @@ export default function FormulaireModal({ onClose }) {
     e.preventDefault();
     if (!form.nom || !form.date || !form.heure) {
       notify('Nom, date et heure sont obligatoires', { type: 'error' });
+      return;
+    }
+    if (form.date < today()) {
+      notify('Impossible de réserver sur une date passée', { type: 'error' });
+      return;
+    }
+    if (form.date === today() && form.heure <= nowHM()) {
+      notify('Ce créneau est déjà passé', { type: 'error' });
       return;
     }
     if (!form.telephone && !form.email) {
@@ -165,8 +193,8 @@ export default function FormulaireModal({ onClose }) {
           <div className="field">
             <span className="field__label">Date * · <span className="weekday">{weekdayLabel(form.date)}</span></span>
             <div className="stepper">
-              <button type="button" className="stepper__btn" onClick={() => shiftDate(-1)} aria-label="Jour précédent">−</button>
-              <input type="date" className="field__input" value={form.date} onChange={set('date')} />
+              <button type="button" className="stepper__btn" onClick={() => shiftDate(-1)} disabled={form.date <= today()} aria-label="Jour précédent">−</button>
+              <input type="date" className="field__input" value={form.date} min={today()} onChange={set('date')} />
               <button type="button" className="stepper__btn" onClick={() => shiftDate(1)} aria-label="Jour suivant">+</button>
             </div>
           </div>
@@ -178,11 +206,15 @@ export default function FormulaireModal({ onClose }) {
               <select className="field__input heure-select" value={form.heure || ''} onChange={set('heure')}>
                 <option value="" disabled>—</option>
                 {event ? (
-                  TIME_SLOTS.map((t) => <option key={t} value={t}>{t}</option>)
+                  wideSlots.map((t) => <option key={t} value={t}>{t}</option>)
                 ) : (
                   <>
-                    <optgroup label="Midi">{SLOTS_MIDI.map((t) => <option key={t} value={t}>{t}</option>)}</optgroup>
-                    <optgroup label="Soir">{SLOTS_SOIR.map((t) => <option key={t} value={t}>{t}</option>)}</optgroup>
+                    {midiSlots.length > 0 && (
+                      <optgroup label="Midi">{midiSlots.map((t) => <option key={t} value={t}>{t}</option>)}</optgroup>
+                    )}
+                    {soirSlots.length > 0 && (
+                      <optgroup label="Soir">{soirSlots.map((t) => <option key={t} value={t}>{t}</option>)}</optgroup>
+                    )}
                   </>
                 )}
               </select>
@@ -191,6 +223,9 @@ export default function FormulaireModal({ onClose }) {
                 Événement spécial
               </label>
             </div>
+            {noSlotToday && (
+              <p className="hint hint--tight">Plus de créneaux aujourd'hui — choisis un autre jour (+).</p>
+            )}
             {form.heure && (
               <p className="hint hint--tight">
                 {event ? 'Catégorie : ' : 'Service : '}

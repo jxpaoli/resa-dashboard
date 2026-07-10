@@ -314,6 +314,7 @@ textarea.field__input { resize: vertical; }
   border-radius: 12px; font-size: 22px; font-weight: 700; color: var(--ink); cursor: pointer; line-height: 1;
 }
 .stepper__btn:active { transform: scale(.95); }
+.stepper__btn:disabled { opacity: .35; cursor: default; }
 .weekday { text-transform: capitalize; color: var(--primary); font-weight: 700; }
 
 /* Toggle Événement */
