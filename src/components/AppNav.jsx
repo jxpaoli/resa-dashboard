@@ -1,12 +1,17 @@
 import { NavLink } from 'react-router-dom';
-import { PlusIcon, ReservationsIcon, TableIcon, ArriveeIcon } from './icons.jsx';
+import { PlusIcon, ReservationsIcon, TableIcon, ArriveeIcon, CheckIcon } from './icons.jsx';
+import { useReservations } from '../hooks/useReservations.js';
 
 // Navigation responsive (logo + déconnexion sont dans le bandeau haut).
 //  - Desktop : barre latérale à gauche
-//  - Mobile  : barre en bas, le gros « + » tout à DROITE ouvre le formulaire
-// Entrées Directeur : Liste · Tables · Arrivée   (Staff : Arrivée)
+//  - Mobile  : barre en bas, le gros « + » à gauche ouvre le formulaire
+// Entrées Directeur : Liste · Plan · Arrivée · À valider   (Staff : Arrivée)
 export default function AppNav({ user, onNew }) {
   const isDir = user.role === 'directeur';
+  const { reservations } = useReservations();
+  const aValider = isDir
+    ? reservations.filter((r) => r.status === 'proposed' && r.source === 'staff').length
+    : 0;
 
   const links = (
     <>
@@ -26,6 +31,15 @@ export default function AppNav({ user, onNew }) {
         <ArriveeIcon className="ic" />
         <span>Arrivée</span>
       </NavLink>
+      {isDir && (
+        <NavLink to="/validation" className={linkClass}>
+          <span className="naventry__ic-wrap">
+            <CheckIcon className="ic" />
+            {aValider > 0 && <span className="naventry__badge">{aValider}</span>}
+          </span>
+          <span>Valider</span>
+        </NavLink>
+      )}
     </>
   );
 

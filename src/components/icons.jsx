@@ -73,6 +73,15 @@ export function ArriveeIcon({ className }) {
   );
 }
 
+// À valider (check)
+export function CheckIcon({ className }) {
+  return (
+    <svg className={className} {...base}>
+      <path d="M20 6 L9 17 l-5 -5" />
+    </svg>
+  );
+}
+
 // Déconnexion (sortir)
 export function LogoutIcon({ className }) {
   return (

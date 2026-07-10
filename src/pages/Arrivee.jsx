@@ -111,7 +111,7 @@ function ArrTile({ r, onOpen, onInstall }) {
         {st && <span className={`arr-badge ${st[1]}`}>{st[0]}</span>}
         <span className="arr2-spacer" />
         {!done && (
-          <button className="btn btn--present arr2-install" onClick={(e) => { e.stopPropagation(); onInstall(r); }}>
+          <button className="btn btn--validate arr2-install" onClick={(e) => { e.stopPropagation(); onInstall(r); }}>
             Installé
           </button>
         )}
