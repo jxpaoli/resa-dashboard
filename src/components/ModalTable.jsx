@@ -1,21 +1,28 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { updateReservation, tableConflict } from '../utils/supabase.js';
 import { useToast } from '../context/ToastContext.jsx';
 import { REMISES } from '../utils/constants.js';
 
-// Modal SERVICE (onglet Tableau de service) : gère la REMISE + le N° de TABLE.
+// Modal SERVICE (page Plan) : gère la REMISE + le N° de TABLE.
 // Warning non bloquant si le n° de table est déjà pris (même date + service).
 export default function ModalTable({ reservation, onClose }) {
   const { notify } = useToast();
   const [numero, setNumero] = useState(reservation.numero_table ?? '');
   const [remise, setRemise] = useState(reservation.remise ?? null);
   const [saving, setSaving] = useState(false);
+  const inputRef = useRef(null);
 
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && onClose();
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
+
+  // À l'ouverture : focus + sélection du n° de table (juste à saisir pour changer)
+  useEffect(() => {
+    const el = inputRef.current;
+    if (el) { el.focus(); el.select(); }
+  }, []);
 
   const num = numero === '' ? null : Number(numero);
   const conflit =
@@ -44,33 +51,27 @@ export default function ModalTable({ reservation, onClose }) {
         </p>
 
         <form onSubmit={submit}>
-          <div className="field">
-            <span className="field__label">REMISE</span>
+          <fieldset className="field">
+            <span className="field__label">Remise</span>
             <div className="radio-row">
-              <button
-                type="button"
-                className={`radio-pill ${remise == null ? 'is-active' : ''}`}
-                onClick={() => setRemise(null)}
-              >
-                À définir
-              </button>
-              {REMISES.map((r) => (
-                <button
-                  key={r.value}
-                  type="button"
-                  className={`radio-pill ${remise === r.value ? 'is-active' : ''}`}
-                  style={remise === r.value ? { borderColor: r.color, color: r.color } : undefined}
-                  onClick={() => setRemise(r.value)}
-                >
-                  {r.short}
-                </button>
-              ))}
+              {REMISES.map((r) => {
+                const active = remise === r.value;
+                return (
+                  <label key={r.value}
+                    className={`radio-pill remise-pill ${active ? 'is-active' : ''}`}
+                    style={{ background: r.pale, color: r.color, borderColor: active ? r.color : 'transparent' }}>
+                    <input type="radio" name="remise-plan" value={r.value} checked={active} onChange={() => setRemise(r.value)} />
+                    {r.label}
+                  </label>
+                );
+              })}
             </div>
-          </div>
+          </fieldset>
 
           <label className="field">
             <span className="field__label">N° TABLE</span>
             <input
+              ref={inputRef}
               type="number"
               min="1"
               inputMode="numeric"
@@ -88,9 +89,7 @@ export default function ModalTable({ reservation, onClose }) {
           )}
 
           <div className="modal__actions">
-            <button type="button" className="btn btn--ghost" onClick={onClose}>
-              Annuler
-            </button>
+            <button type="button" className="btn btn--ghost" onClick={onClose}>Annuler</button>
             <button type="submit" className="btn btn--primary" disabled={saving}>
               {saving ? '…' : 'Enregistrer'}
             </button>
