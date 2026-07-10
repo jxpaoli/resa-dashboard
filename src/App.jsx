@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext.jsx';
 import AppNav from './components/AppNav.jsx';
+import TopBanner from './components/TopBanner.jsx';
 import FormulaireModal from './components/FormulaireModal.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import Login from './pages/Login.jsx';
@@ -24,7 +25,8 @@ export default function App() {
 
   return (
     <div className={`app ${user ? 'app--auth' : ''}`}>
-      {user && <AppNav user={user} onNew={() => setFormOpen(true)} onLogout={handleLogout} />}
+      {user && <TopBanner user={user} onLogout={handleLogout} />}
+      {user && <AppNav user={user} onNew={() => setFormOpen(true)} />}
 
       <main className="app__main">
         <Routes>

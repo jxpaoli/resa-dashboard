@@ -1,12 +1,11 @@
 import { NavLink } from 'react-router-dom';
-import Logo from './Logo.jsx';
-import { PlusIcon, ReservationsIcon, TableIcon, ArriveeIcon, LogoutIcon } from './icons.jsx';
+import { PlusIcon, ReservationsIcon, TableIcon, ArriveeIcon } from './icons.jsx';
 
-// Navigation responsive :
+// Navigation responsive (logo + déconnexion sont dans le bandeau haut).
 //  - Desktop : barre latérale à gauche
-//  - Mobile  : barre en bas, le gros « + » tout à DROITE ouvre le formulaire (modal)
+//  - Mobile  : barre en bas, le gros « + » tout à DROITE ouvre le formulaire
 // Entrées Directeur : Liste · Tables · Arrivée   (Staff : Arrivée)
-export default function AppNav({ user, onNew, onLogout }) {
+export default function AppNav({ user, onNew }) {
   const isDir = user.role === 'directeur';
 
   const links = (
@@ -34,31 +33,15 @@ export default function AppNav({ user, onNew, onLogout }) {
     <>
       {/* ---------- Desktop : sidebar ---------- */}
       <aside className="sidebar">
-        <div className="sidebar__logo">
-          <Logo light />
-        </div>
-
         <button className="sidebar__new" onClick={onNew}>
           <PlusIcon className="ic" /> Nouvelle réservation
         </button>
-
         <nav className="sidebar__nav">{links}</nav>
-
-        <div className="sidebar__foot">
-          <div className="sidebar__user">{user.nom}</div>
-          <button className="sidebar__logout" onClick={onLogout}>
-            <LogoutIcon className="ic" /> Déconnexion
-          </button>
-        </div>
       </aside>
 
       {/* ---------- Mobile : bottom bar (+ à droite) ---------- */}
       <nav className="bottombar">
         {links}
-        <button className="naventry" onClick={onLogout}>
-          <LogoutIcon className="ic" />
-          <span>Sortir</span>
-        </button>
         <button className="bottombar__fab" onClick={onNew} aria-label="Nouvelle réservation">
           <PlusIcon className="bottombar__fabic" />
         </button>
@@ -67,7 +50,6 @@ export default function AppNav({ user, onNew, onLogout }) {
   );
 }
 
-// classe pour NavLink (desktop + mobile partagent la même structure via CSS)
 function linkClass({ isActive }) {
   return `naventry ${isActive ? 'is-active' : ''}`;
 }

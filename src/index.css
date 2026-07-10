@@ -4,20 +4,23 @@
    =========================================================================== */
 
 :root {
-  --bg: #f1f5f9;
-  --surface: #ffffff;
-  --ink: #0f172a;
-  --ink-soft: #475569;
-  --muted: #94a3b8;
-  --border: #e2e8f0;
-  --primary: #0f172a;
+  /* Identité « Aux Terrasses de Troinex » : crème + teal + or */
+  --bg: #f4efe3;         /* crème (fond) */
+  --surface: #ffffff;    /* cartes */
+  --ink: #201f1b;        /* encre chaude */
+  --ink-soft: #5f5c52;
+  --muted: #a49f92;
+  --border: #e7e0d1;     /* beige */
+  --primary: #3f7a6e;    /* teal (marque) */
   --primary-ink: #ffffff;
+  --gold: #c19a45;       /* or (accents) */
+  /* Couleurs fonctionnelles — NE PAS teinter */
   --present: #10b981;
   --validate: #2563eb;
   --reject: #ef4444;
   --radius: 14px;
-  --shadow: 0 1px 3px rgba(15, 23, 42, .08), 0 1px 2px rgba(15, 23, 42, .04);
-  --shadow-lg: 0 10px 25px rgba(15, 23, 42, .18);
+  --shadow: 0 1px 3px rgba(31, 28, 20, .08), 0 1px 2px rgba(31, 28, 20, .04);
+  --shadow-lg: 0 10px 25px rgba(31, 28, 20, .18);
 }
 
 * { box-sizing: border-box; }
@@ -36,9 +39,42 @@ body {
 /* ------------------------------- Layout ---------------------------------- */
 .app { min-height: 100%; display: flex; flex-direction: column; }
 .app__main { flex: 1; }
-/* Décalage quand connecté : place pour la barre latérale (desktop) */
+/* Connecté : place pour le bandeau haut (56px) et la sidebar (desktop) */
+.app--auth .app__main { padding-top: 56px; }
 @media (min-width: 720px) {
   .app--auth .app__main { margin-left: 220px; }
+}
+
+/* ------------------------------- Bandeau haut ---------------------------- */
+.topbanner {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 40; height: 56px;
+  display: flex; align-items: center; gap: 10px; padding: 0 12px;
+  background: var(--surface); border-bottom: 2px solid var(--gold);
+}
+.topbanner__user { position: relative; flex-shrink: 0; }
+.avatar {
+  width: 38px; height: 38px; border-radius: 50%; border: none; cursor: pointer;
+  background: var(--primary); color: #fff; font-weight: 700; font-size: 14px; font-family: inherit;
+  display: grid; place-items: center;
+}
+.avatar:hover { filter: brightness(1.08); }
+.topbanner__logo { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.topbanner__sprig { height: 26px; width: auto; flex-shrink: 0; }
+.topbanner__word {
+  font-family: Georgia, 'Times New Roman', serif; font-size: 15px; letter-spacing: 1px;
+  color: var(--ink); font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.topbanner__spacer { width: 38px; flex-shrink: 0; }
+.usermenu {
+  position: absolute; top: 46px; left: 0; z-index: 50; width: 190px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  box-shadow: var(--shadow-lg); padding: 12px;
+}
+.usermenu__name { font-weight: 700; }
+.usermenu__role { font-size: 12px; color: var(--ink-soft); text-transform: capitalize; margin: 2px 0 10px; }
+@media (max-width: 380px) {
+  .topbanner__sprig { display: none; }
+  .topbanner__word { font-size: 14px; }
 }
 
 .page { max-width: 900px; margin: 0 auto; padding: 16px 16px 96px; }
@@ -57,7 +93,7 @@ body {
 @media (min-width: 720px) {
   .sidebar {
     display: flex; flex-direction: column; gap: 8px;
-    position: fixed; top: 0; left: 0; bottom: 0; width: 220px; z-index: 30;
+    position: fixed; top: 56px; left: 0; bottom: 0; width: 220px; z-index: 30;
     background: var(--primary); color: #fff; padding: 20px 14px;
   }
   .bottombar { display: none; }
@@ -149,7 +185,7 @@ body {
 .btn:disabled { opacity: .5; cursor: default; }
 .btn--primary { background: var(--primary); color: var(--primary-ink); }
 .btn--ghost { background: transparent; color: var(--ink); border: 1.5px solid var(--border); }
-.btn--ghost:hover { background: #f8fafc; }
+.btn--ghost:hover { background: #faf6ec; }
 .btn--block { width: 100%; }
 .btn--lg { padding: 16px; font-size: 17px; }
 .btn--sm { padding: 7px 12px; font-size: 13px; }
@@ -186,7 +222,7 @@ textarea.field__input { resize: vertical; }
   min-width: 88px;
 }
 .radio-pill input { display: none; }
-.radio-pill.is-active { border-color: var(--ink); background: #f8fafc; }
+.radio-pill.is-active { border-color: var(--ink); background: #faf6ec; }
 
 /* ------------------------------- Forms ----------------------------------- */
 .form-card, .login-card {
@@ -236,7 +272,7 @@ textarea.field__input { resize: vertical; }
 .arr-tile__table {
   font-size: 20px; font-weight: 800; min-width: 54px; height: 54px;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
-  background: #f1f5f9; border-radius: 12px; color: var(--ink);
+  background: #f1ebdd; border-radius: 12px; color: var(--ink);
 }
 .arr-tile__tableic { width: 18px; height: 18px; color: var(--ink-soft); }
 .arr-tile__info { flex: 1; }
@@ -260,7 +296,7 @@ textarea.field__input { resize: vertical; }
 .res-tile__actions { display: flex; gap: 10px; margin-top: 12px; }
 .src { font-weight: 600; color: var(--ink); }
 .res-tile__badges { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-.hint { font-size: 13px; color: var(--ink-soft); background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin: 0 0 14px; }
+.hint { font-size: 13px; color: var(--ink-soft); background: #faf6ec; border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin: 0 0 14px; }
 .hint__soft { color: var(--muted); }
 .tablepill { display: inline-flex; align-items: center; gap: 4px; background: #ecfeff; color: #0e7490; font-weight: 700; font-size: 12px; padding: 3px 9px; border-radius: 999px; }
 
@@ -277,7 +313,7 @@ textarea.field__input { resize: vertical; }
 
 /* ------------------------------- Filtres / onglets ----------------------- */
 .filters { display: flex; align-items: flex-end; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
-.seg { display: inline-flex; background: #e2e8f0; border-radius: 12px; padding: 3px; }
+.seg { display: inline-flex; background: #e8e0cf; border-radius: 12px; padding: 3px; }
 .seg__btn {
   border: none; background: transparent; font-weight: 600; font-family: inherit;
   padding: 9px 18px; border-radius: 9px; cursor: pointer; color: var(--ink-soft);
@@ -293,15 +329,15 @@ textarea.field__input { resize: vertical; }
 
 .section { margin-bottom: 24px; }
 .section__title { font-size: 16px; font-weight: 700; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; }
-.count { font-size: 12px; font-weight: 700; background: #e2e8f0; color: var(--ink-soft); padding: 2px 9px; border-radius: 999px; }
+.count { font-size: 12px; font-weight: 700; background: #e8e0cf; color: var(--ink-soft); padding: 2px 9px; border-radius: 999px; }
 
 /* -------------------- Onglet 2 : tableau de service ---------------------- */
 .svc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .svc-col-left, .svc-col-right { display: flex; flex-direction: column; gap: 12px; }
-.svc-case { background: #eef2f6; border-radius: var(--radius); overflow: hidden; }
+.svc-case { background: #efe8d7; border-radius: var(--radius); overflow: hidden; }
 .svc-case__head {
   font-weight: 800; font-size: 13px; padding: 10px 12px;
-  background: #e2e8f0; border-left: 4px solid; display: flex; align-items: center; gap: 8px;
+  background: #e8e0cf; border-left: 4px solid; display: flex; align-items: center; gap: 8px;
 }
 .svc-case__body { padding: 8px; display: flex; flex-direction: column; gap: 6px; min-height: 48px; }
 .svc-item {
@@ -339,7 +375,7 @@ textarea.field__input { resize: vertical; }
   padding: 14px; box-shadow: var(--shadow);
 }
 .recap__pills { display: flex; flex-wrap: wrap; gap: 8px; }
-.pill { background: #f1f5f9; border: 1px solid var(--border); border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 600; }
+.pill { background: #f1ebdd; border: 1px solid var(--border); border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 600; }
 .recap__total { margin-top: 12px; font-size: 16px; font-weight: 800; }
 
 /* ------------------------------- Modal ----------------------------------- */
