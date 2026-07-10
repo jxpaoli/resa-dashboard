@@ -190,11 +190,11 @@ function ResaRow({ r, onEdit }) {
       style={{ borderColor: meta.color }}
       onClick={() => onEdit(r)}
     >
-      <span className="agenda-row__evt">
+      <span className="agenda-row__h">{r.heure}</span>
+      <span className="agenda-row__main">
+        <span className="agenda-row__nom">{r.nom}{r.prenom ? ` ${r.prenom}` : ''}</span>
         {r.evenement && <span className="rbadge rbadge--evt">🎉</span>}
       </span>
-      <span className="agenda-row__h">{r.heure}</span>
-      <span className="agenda-row__nom">{r.nom}{r.prenom ? ` ${r.prenom}` : ''}</span>
       <span className="rbadge rbadge--couv"><CouvertIcon className="ic-sm" />{r.couverts}</span>
       {placed ? (
         <span className="rbadge rbadge--table"><TableIcon className="ic-sm" />{String(r.numero_table).padStart(3, '0')}</span>

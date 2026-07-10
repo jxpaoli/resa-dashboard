@@ -350,16 +350,16 @@ textarea.field__input { resize: vertical; }
 
 /* Colonnes fixes → badges alignés d'une ligne à l'autre */
 .agenda-row {
-  display: grid; grid-template-columns: 28px 44px 1fr 54px 62px;
+  display: grid; grid-template-columns: 44px 1fr 54px 62px;
   align-items: center; gap: 8px; width: 100%; text-align: left;
   background: var(--surface); border: 2px solid var(--border); border-radius: 12px;
   padding: 10px 12px; margin-bottom: 8px; cursor: pointer; font-family: inherit; box-shadow: var(--shadow);
 }
 .agenda-row.is-placed { background: #ecfdf5; } /* table attribuée = vert clair (blanc sinon) */
 .agenda-row:active { transform: scale(.995); }
-.agenda-row__evt { display: flex; justify-content: center; }
 .agenda-row__h { font-weight: 400; font-size: 14px; color: var(--ink-soft); }
-.agenda-row__nom { font-weight: 800; font-size: 17px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.agenda-row__main { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.agenda-row__nom { font-weight: 600; font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rbadge {
   display: inline-flex; align-items: center; justify-content: center; gap: 3px; width: 100%;
   font-weight: 800; font-size: 12.5px; padding: 3px 6px; border-radius: 999px;
