@@ -436,6 +436,23 @@ textarea.field__input { resize: vertical; }
 .evt-check input { width: 18px; height: 18px; accent-color: var(--gold); }
 
 /* Modal formulaire : fond crème, champs légèrement plus foncés */
+.modal { position: relative; }
+.modal--confirm { max-width: 340px; }
+.modal-overlay--top { z-index: 210; }
+/* Bouton annuler la réservation (carré rouge + croix, label dessous) */
+.cancel-corner {
+  position: absolute; top: 14px; right: 14px; z-index: 2;
+  display: flex; flex-direction: column; align-items: center; gap: 3px; width: 64px;
+}
+.cancel-x {
+  width: 36px; height: 36px; border-radius: 9px; border: none; cursor: pointer;
+  background: var(--reject); color: #fff; font-size: 18px; font-weight: 800;
+  display: grid; place-items: center; line-height: 1;
+}
+.cancel-x:active { transform: scale(.92); }
+.cancel-label { font-size: 9px; font-weight: 700; color: var(--reject); text-align: center; line-height: 1.15; }
+.modal--cancelable .modal__title, .modal--cancelable .modal__sub { padding-right: 76px; }
+
 .modal.modal--form { background: var(--bg); }
 .modal--form .field__input,
 .modal--form .stepper__btn,

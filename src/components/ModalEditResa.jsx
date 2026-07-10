@@ -19,7 +19,16 @@ export default function ModalEditResa({ reservation, onClose }) {
     notes: reservation.notes || '',
   });
   const [saving, setSaving] = useState(false);
+  const [confirmCancel, setConfirmCancel] = useState(false);
   const set = (k) => (e) => setF((s) => ({ ...s, [k]: e.target.value }));
+
+  const canCancel = reservation.status === 'validated'; // annulation = résa validée
+
+  const doCancel = async () => {
+    await updateReservation(reservation.id, { status: 'archived' });
+    notify(`${reservation.nom} — réservation annulée`, { type: 'info' });
+    onClose();
+  };
 
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && onClose();
@@ -52,7 +61,13 @@ export default function ModalEditResa({ reservation, onClose }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal modal--wide" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+      <div className={`modal modal--wide ${canCancel ? 'modal--cancelable' : ''}`} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+        {canCancel && (
+          <div className="cancel-corner">
+            <button type="button" className="cancel-x" onClick={() => setConfirmCancel(true)} aria-label="Annuler cette réservation">✕</button>
+            <span className="cancel-label">Annuler cette réservation</span>
+          </div>
+        )}
         <h2 className="modal__title">Éditer la réservation</h2>
         <p className="modal__sub">
           Service : <strong>{serviceLabel(service)}</strong> (déduit de l'heure)
@@ -99,6 +114,21 @@ export default function ModalEditResa({ reservation, onClose }) {
           </div>
         </form>
       </div>
+
+      {confirmCancel && (
+        <div className="modal-overlay modal-overlay--top" onClick={() => setConfirmCancel(false)}>
+          <div className="modal modal--confirm" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+            <h2 className="modal__title">Annuler la réservation ?</h2>
+            <p className="modal__sub">
+              {reservation.nom} — {reservation.date} · {reservation.heure}. La réservation sera retirée du service.
+            </p>
+            <div className="modal__actions">
+              <button type="button" className="btn btn--ghost" onClick={() => setConfirmCancel(false)}>Non</button>
+              <button type="button" className="btn btn--reject" onClick={doCancel}>Oui, annuler</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
