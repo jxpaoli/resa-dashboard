@@ -1,0 +1,9 @@
+# Configuration Cloudflare (Worker à assets statiques).
+# Sert le dossier dist/ comme un site statique, avec fallback SPA
+# (toute route inconnue -> index.html) pour que React Router fonctionne.
+name = "resa-dashboard"
+compatibility_date = "2026-07-01"
+
+[assets]
+directory = "./dist"
+not_found_handling = "single-page-application"
