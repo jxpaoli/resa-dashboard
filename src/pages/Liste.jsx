@@ -1,132 +1,198 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef, useEffect } from 'react';
 import { useReservations } from '../hooks/useReservations.js';
-import { useAuth } from '../context/AuthContext.jsx';
-import { useToast } from '../context/ToastContext.jsx';
-import { updateReservation } from '../utils/supabase.js';
-import { SOURCE_LABELS, byHeure } from '../utils/constants.js';
-import RemiseBadge from '../components/RemiseBadge.jsx';
 import ModalEditResa from '../components/ModalEditResa.jsx';
-import ServiceFilters from '../components/ServiceFilters.jsx';
-import { TableIcon } from '../components/icons.jsx';
+import { TableIcon, CouvertIcon } from '../components/icons.jsx';
+import { byHeure } from '../utils/constants.js';
 
-const today = () => new Date().toISOString().slice(0, 10);
+const pad = (n) => String(n).padStart(2, '0');
+const today = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+};
+// Événements greffés midi/soir selon l'heure : < 16h = midi, sinon soir
+const periodOf = (heure) => ((heure || '') < '16:00' ? 'midi' : 'soir');
+const fmtLong = (dateStr) => {
+  const d = new Date(dateStr + 'T00:00:00');
+  const s = d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+  return s.charAt(0).toUpperCase() + s.slice(1);
+};
 
-// Page LISTE (Directeur) : réservations proposées (à valider) + validées (à éditer).
+const BANNER = 56; // hauteur du bandeau haut fixe
+
+// Page LISTE (Directeur) : agenda déroulant des résas validées, à partir d'aujourd'hui.
 export default function Liste() {
-  const { reservations, loading } = useReservations();
-  const { user } = useAuth();
-  const { notify } = useToast();
-
-  const [date, setDate] = useState(today());
-  const [service, setService] = useState('soir');
+  const { reservations } = useReservations();
+  const [query, setQuery] = useState('');
   const [editResa, setEditResa] = useState(null);
+  const [current, setCurrent] = useState({ date: null, service: 'midi' });
 
-  const scoped = useMemo(
-    () => reservations.filter((r) => r.date === date && r.service === service),
-    [reservations, date, service]
-  );
-  const proposees = useMemo(
-    () => scoped.filter((r) => r.status === 'proposed' && r.source === 'staff').sort(byHeure),
-    [scoped]
-  );
-  const validees = useMemo(
-    () => scoped.filter((r) => r.status === 'validated').sort(byHeure),
-    [scoped]
-  );
-
-  const valider = async (r) => {
-    await updateReservation(r.id, {
-      status: 'validated',
-      validated_by: user.id,
-      validated_at: new Date().toISOString(),
-    });
-    notify(`${r.nom} validée`, { type: 'success' });
+  const stickyRef = useRef(null);
+  const blockRefs = useRef({});
+  const setBlockRef = (key) => (el) => {
+    if (el) blockRefs.current[key] = el;
+    else delete blockRefs.current[key];
   };
-  const rejeter = async (r) => {
-    await updateReservation(r.id, { status: 'archived' });
-    notify(`${r.nom} rejetée`, { type: 'info' });
+
+  const aValider = useMemo(
+    () => reservations.filter((r) => r.status === 'proposed' && r.source === 'staff').length,
+    [reservations]
+  );
+
+  const days = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const valid = reservations.filter(
+      (r) =>
+        r.status === 'validated' &&
+        r.date >= today() &&
+        (!q ||
+          (r.nom || '').toLowerCase().includes(q) ||
+          (r.prenom || '').toLowerCase().includes(q))
+    );
+    const byDate = new Map();
+    valid.forEach((r) => {
+      if (!byDate.has(r.date)) byDate.set(r.date, []);
+      byDate.get(r.date).push(r);
+    });
+    return [...byDate.keys()].sort().map((date) => {
+      const list = byDate.get(date);
+      const midi = list.filter((r) => periodOf(r.heure) === 'midi').sort(byHeure);
+      const soir = list.filter((r) => periodOf(r.heure) === 'soir').sort(byHeure);
+      return {
+        date,
+        midi,
+        soir,
+        couvMidi: midi.reduce((s, r) => s + Number(r.couverts), 0),
+        couvSoir: soir.reduce((s, r) => s + Number(r.couverts), 0),
+      };
+    });
+  }, [reservations, query]);
+
+  // Scroll-spy : détermine le jour + service en tête d'écran
+  useEffect(() => {
+    let raf = 0;
+    const update = () => {
+      const stickyH = stickyRef.current?.offsetHeight || 0;
+      const threshold = BANNER + stickyH + 6;
+      let best = null;
+      for (const [key, el] of Object.entries(blockRefs.current)) {
+        const top = el.getBoundingClientRect().top;
+        if (top <= threshold && (!best || top > best.top)) best = { key, top };
+      }
+      if (best) {
+        const [date, service] = best.key.split('|');
+        setCurrent((c) => (c.date === date && c.service === service ? c : { date, service }));
+      } else if (days.length) {
+        const d0 = days[0];
+        const svc = d0.midi.length ? 'midi' : 'soir';
+        setCurrent((c) => (c.date === d0.date && c.service === svc ? c : { date: d0.date, service: svc }));
+      }
+    };
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      cancelAnimationFrame(raf);
+    };
+  }, [days]);
+
+  const scrollToKey = (key) => {
+    const el = blockRefs.current[key];
+    if (!el) return;
+    const stickyH = stickyRef.current?.offsetHeight || 0;
+    const y = el.getBoundingClientRect().top + window.scrollY - BANNER - stickyH - 6;
+    window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+  };
+
+  const curDay = days.find((d) => d.date === current.date) || days[0] || null;
+  const curIdx = curDay ? days.indexOf(curDay) : -1;
+
+  const gotoDay = (delta) => {
+    const idx = curIdx + delta;
+    if (idx < 0 || idx >= days.length) return;
+    const d = days[idx];
+    scrollToKey(`${d.date}|${d.midi.length ? 'midi' : 'soir'}`);
+  };
+  const gotoService = (svc) => {
+    if (!curDay) return;
+    if (svc === 'midi' && !curDay.midi.length) return;
+    if (svc === 'soir' && !curDay.soir.length) return;
+    scrollToKey(`${curDay.date}|${svc}`);
   };
 
   return (
-    <div className="page">
-      <header className="page__header">
-        <h1 className="page__title">Liste</h1>
-      </header>
+    <div className="page agenda">
+      {/* En-tête collant */}
+      <div className="agenda-head" ref={stickyRef}>
+        <input
+          className="agenda-search"
+          placeholder="🔎  Chercher un nom"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+        {aValider > 0 && <div className="agenda-tovalidate">🔔 {aValider} à valider</div>}
 
-      <ServiceFilters date={date} setDate={setDate} service={service} setService={setService} />
+        <div className="agenda-daybar">
+          <button className="stepper__btn stepper__btn--sm" onClick={() => gotoDay(-1)} disabled={curIdx <= 0}>−</button>
+          <span className="agenda-date">{curDay ? fmtLong(curDay.date) : '—'}</span>
+          <button className="stepper__btn stepper__btn--sm" onClick={() => gotoDay(1)} disabled={curIdx < 0 || curIdx >= days.length - 1}>+</button>
+          <div className="seg agenda-seg">
+            <button className={`seg__btn ${current.service === 'midi' ? 'is-active' : ''}`} onClick={() => gotoService('midi')}>Midi</button>
+            <button className={`seg__btn ${current.service === 'soir' ? 'is-active' : ''}`} onClick={() => gotoService('soir')}>Soir</button>
+          </div>
+        </div>
 
-      {loading ? (
-        <p className="muted">Chargement…</p>
+        <div className="agenda-recap">
+          {curDay
+            ? <>Midi : <strong>{curDay.couvMidi}</strong> couv · Soir : <strong>{curDay.couvSoir}</strong> couv</>
+            : '—'}
+        </div>
+      </div>
+
+      {/* Corps */}
+      {days.length === 0 ? (
+        <p className="muted" style={{ marginTop: 16 }}>Aucune réservation à venir.</p>
       ) : (
-        <>
-          <section className="section">
-            <h2 className="section__title">
-              Proposées <span className="count">{proposees.length}</span>
-            </h2>
-            {proposees.length === 0 ? (
-              <p className="muted">Aucune proposition en attente.</p>
-            ) : (
-              <div className="tiles">
-                {proposees.map((r) => (
-                  <div key={r.id} className="res-tile res-tile--proposed">
-                    <div className="res-tile__head">
-                      <span className="res-tile__nom">{r.nom}</span>
-                      <RemiseBadge value={r.remise} />
-                    </div>
-                    <div className="res-tile__meta">
-                      {r.date} · {r.heure} · {r.couverts} couv. · <span className="src">Staff</span>
-                      {r.numero_table != null && (
-                        <span className="tablepill"><TableIcon className="ic-sm" />{r.numero_table}</span>
-                      )}
-                    </div>
-                    {r.notes && <div className="res-tile__notes">📝 {r.notes}</div>}
-                    <div className="res-tile__actions">
-                      <button className="btn btn--validate" onClick={() => valider(r)}>Valider</button>
-                      <button className="btn btn--reject" onClick={() => rejeter(r)}>Rejeter</button>
-                    </div>
-                    <button className="btn btn--ghost btn--block" onClick={() => setEditResa(r)}>Éditer</button>
-                  </div>
-                ))}
+        days.map((d, i) => (
+          <div key={d.date} className="agenda-day">
+            {i > 0 && <div className="agenda-day-sep" />}
+            {d.midi.length > 0 && (
+              <div className="agenda-svc" ref={setBlockRef(`${d.date}|midi`)}>
+                <div className="agenda-svc-label">Midi</div>
+                {d.midi.map((r) => <ResaRow key={r.id} r={r} onEdit={setEditResa} />)}
               </div>
             )}
-          </section>
-
-          <section className="section">
-            <h2 className="section__title">
-              Validées <span className="count">{validees.length}</span>
-            </h2>
-            {validees.length === 0 ? (
-              <p className="muted">Aucune réservation validée pour ce service.</p>
-            ) : (
-              <div className="tiles">
-                {validees.map((r) => (
-                  <div key={r.id} className="res-tile">
-                    <div className="res-tile__head">
-                      <span className="res-tile__nom">{r.nom}</span>
-                      <span className="res-tile__badges">
-                        <RemiseBadge value={r.remise} />
-                        {r.numero_table != null && (
-                          <span className="tablepill"><TableIcon className="ic-sm" />{r.numero_table}</span>
-                        )}
-                      </span>
-                    </div>
-                    <div className="res-tile__meta">
-                      {r.date} · {r.heure} · {r.couverts} couv. ·{' '}
-                      <span className="src">{SOURCE_LABELS[r.source] || r.source}</span>
-                    </div>
-                    {r.notes && <div className="res-tile__notes">📝 {r.notes}</div>}
-                    <button className="btn btn--ghost btn--block" onClick={() => setEditResa(r)}>
-                      Éditer la réservation
-                    </button>
-                  </div>
-                ))}
+            {d.midi.length > 0 && d.soir.length > 0 && <div className="agenda-svc-sep" />}
+            {d.soir.length > 0 && (
+              <div className="agenda-svc" ref={setBlockRef(`${d.date}|soir`)}>
+                <div className="agenda-svc-label">Soir</div>
+                {d.soir.map((r) => <ResaRow key={r.id} r={r} onEdit={setEditResa} />)}
               </div>
             )}
-          </section>
-        </>
+          </div>
+        ))
       )}
 
       {editResa && <ModalEditResa reservation={editResa} onClose={() => setEditResa(null)} />}
     </div>
+  );
+}
+
+function ResaRow({ r, onEdit }) {
+  return (
+    <button className="agenda-row" onClick={() => onEdit(r)}>
+      <span className="agenda-row__h">{r.heure}</span>
+      <span className="agenda-row__nom">
+        {r.nom}{r.prenom ? ` ${r.prenom}` : ''}
+      </span>
+      {r.evenement && <span className="agenda-badge-evt">Événement</span>}
+      <span className="agenda-row__c"><CouvertIcon className="ic-sm" />{r.couverts}</span>
+      {r.numero_table != null && (
+        <span className="agenda-row__t"><TableIcon className="ic-sm" />{r.numero_table}</span>
+      )}
+    </button>
   );
 }
