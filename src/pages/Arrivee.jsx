@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useReservations } from '../hooks/useReservations.js';
 import { updateReservation } from '../utils/supabase.js';
 import { useToast } from '../context/ToastContext.jsx';
+import { TableIcon, CouvertIcon } from '../components/icons.jsx';
 
 // Rang de tri par état de présence (cf. brief) :
 // 1. présent (arrivé, service pas encore validé)
@@ -42,11 +43,14 @@ export default function Arrivee() {
             return (
               <div key={r.id} className={`arr-tile arr-tile--${state}`}>
                 <div className="arr-tile__main">
-                  <div className="arr-tile__table">#{r.numero_table}</div>
+                  <div className="arr-tile__table">
+                    <TableIcon className="arr-tile__tableic" />
+                    <span>{r.numero_table}</span>
+                  </div>
                   <div className="arr-tile__info">
                     <div className="arr-tile__nom">{r.nom}</div>
                     <div className="arr-tile__meta">
-                      {r.date} · {r.heure} · {r.couverts} couv.
+                      {r.date} · {r.heure} · <CouvertIcon className="ic-sm" />{r.couverts}
                     </div>
                   </div>
                   {r.presence === 'present' && <span className="tag tag--live">Arrivé</span>}

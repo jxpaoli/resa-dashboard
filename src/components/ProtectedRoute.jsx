@@ -8,7 +8,7 @@ export default function ProtectedRoute({ children, role }) {
   if (!user) return <Navigate to="/login" replace />;
   if (role && user.role !== role) {
     // Pas le bon rôle → renvoie vers sa page d'accueil naturelle
-    return <Navigate to={user.role === 'directeur' ? '/reservations' : '/formulaire'} replace />;
+    return <Navigate to={user.role === 'directeur' ? '/reservations' : '/arrivee'} replace />;
   }
   return children;
 }

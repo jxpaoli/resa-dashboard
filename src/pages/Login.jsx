@@ -18,7 +18,7 @@ export default function Login() {
     setLoading(true);
     try {
       const user = await login(email.trim(), password);
-      navigate(user.role === 'directeur' ? '/reservations' : '/formulaire', { replace: true });
+      navigate(user.role === 'directeur' ? '/liste' : '/arrivee', { replace: true });
     } catch (err) {
       setError(err.message);
     } finally {
