@@ -7,9 +7,13 @@ export default function ServiceFilters({ date, setDate, service, setService }) {
         <input type="date" className="field__input" value={date} onChange={(e) => setDate(e.target.value)} />
       </label>
       <div className="seg">
-        {['midi', 'soir'].map((s) => (
+        {[
+          ['midi', 'Midi'],
+          ['soir', 'Soir'],
+          ['evenement', 'Événement'],
+        ].map(([s, label]) => (
           <button key={s} className={`seg__btn ${service === s ? 'is-active' : ''}`} onClick={() => setService(s)}>
-            {s === 'midi' ? 'Midi' : 'Soir'}
+            {label}
           </button>
         ))}
       </div>

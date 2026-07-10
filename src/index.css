@@ -303,6 +303,48 @@ textarea.field__input { resize: vertical; }
 .res-tile__badges { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .hint { font-size: 13px; color: var(--ink-soft); background: #faf6ec; border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin: 0 0 14px; }
 .hint__soft { color: var(--muted); }
+.hint--tight { padding: 7px 10px; margin: -6px 0 12px; font-size: 12.5px; }
+
+/* Steppers +/- (date, couverts) */
+.stepper { display: flex; align-items: stretch; gap: 8px; }
+.stepper .field__input { flex: 1; }
+.stepper__num { text-align: center; font-weight: 700; }
+.stepper__btn {
+  width: 48px; flex-shrink: 0; border: 1.5px solid var(--border); background: var(--surface);
+  border-radius: 12px; font-size: 22px; font-weight: 700; color: var(--ink); cursor: pointer; line-height: 1;
+}
+.stepper__btn:active { transform: scale(.95); }
+.weekday { text-transform: capitalize; color: var(--primary); font-weight: 700; }
+
+/* Toggle Événement */
+.evt-toggle {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%;
+  padding: 12px 14px; margin-bottom: 14px; border: 1.5px solid var(--border); border-radius: 12px;
+  background: var(--surface); font-family: inherit; font-weight: 600; font-size: 14px; color: var(--ink); cursor: pointer;
+}
+.evt-toggle.is-on { border-color: var(--gold); background: #fbf3df; }
+.evt-toggle__state { font-size: 12px; font-weight: 700; color: var(--ink-soft); }
+.evt-toggle.is-on .evt-toggle__state { color: var(--gold); }
+
+.linklike { background: none; border: none; color: var(--primary); font-weight: 600; font-family: inherit; cursor: pointer; padding: 6px 0; font-size: 13px; }
+
+/* Civilité : petits boutons */
+.radio-row--sm { gap: 6px; }
+.radio-pill--sm { flex: 0 0 auto; min-width: 0; padding: 6px 14px; font-size: 13px; border-radius: 10px; }
+
+/* Heure compacte + coche événement */
+.heure-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.field__input.heure-select { width: 112px; flex: 0 0 auto; }
+.evt-check { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.evt-check input { width: 18px; height: 18px; accent-color: var(--gold); }
+
+/* Modal formulaire : fond crème, champs légèrement plus foncés */
+.modal.modal--form { background: var(--bg); }
+.modal--form .field__input,
+.modal--form .stepper__btn,
+.modal--form .radio-pill { background: #ece3d0; border-color: #ddd2ba; }
+.modal--form .radio-pill.is-active { background: #f6f0e2; }
+.modal--form .remise-pill { border-color: transparent; }
 .tablepill { display: inline-flex; align-items: center; gap: 4px; background: #ecfeff; color: #0e7490; font-weight: 700; font-size: 12px; padding: 3px 9px; border-radius: 999px; }
 
 .badge { color: #fff; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
