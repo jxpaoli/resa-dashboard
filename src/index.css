@@ -362,6 +362,10 @@ textarea.field__input { resize: vertical; }
 .stepper__btn:disabled { opacity: .35; cursor: default; }
 .stepper__btn--sm { width: 38px; font-size: 20px; }
 
+/* Sélecteur de date − / + (Plan, Arrivée) */
+.datestep { display: flex; align-items: center; gap: 10px; }
+.datestep__label { font-weight: 800; font-size: 15px; text-transform: capitalize; white-space: nowrap; }
+
 /* ------------------------------- Agenda (page Liste) --------------------- */
 .agenda-head {
   position: sticky; top: 56px; z-index: 20;

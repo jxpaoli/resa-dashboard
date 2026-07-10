@@ -21,7 +21,8 @@ export default function Tables() {
     () =>
       reservations
         .filter((r) => r.date === date && r.service === service && r.status === 'validated')
-        .sort(byHeure),
+        // triées par nombre de couverts (gros d'abord), heure en départage
+        .sort((a, b) => b.couverts - a.couverts || byHeure(a, b)),
     [reservations, date, service]
   );
 

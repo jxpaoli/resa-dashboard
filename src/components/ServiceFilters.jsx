@@ -1,11 +1,10 @@
-// Filtre commun Date + Service (réutilisé par Liste et Tables).
+import DateStepper from './DateStepper.jsx';
+
+// Filtre commun Date (− / +) + Service (utilisé par Plan).
 export default function ServiceFilters({ date, setDate, service, setService }) {
   return (
     <div className="filters">
-      <label className="field field--inline">
-        <span className="field__label">Date</span>
-        <input type="date" className="field__input" value={date} onChange={(e) => setDate(e.target.value)} />
-      </label>
+      <DateStepper date={date} setDate={setDate} />
       <div className="seg">
         {[
           ['midi', 'Midi'],

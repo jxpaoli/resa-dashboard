@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 import { TableIcon, CouvertIcon } from '../components/icons.jsx';
 import ModalArrivee from '../components/ModalArrivee.jsx';
+import DateStepper from '../components/DateStepper.jsx';
 
 const pad = (n) => String(n).padStart(2, '0');
 const pad3 = (n) => String(n).padStart(3, '0');
@@ -36,16 +37,16 @@ export default function Arrivee() {
   const { notify } = useToast();
   const [picked, setPicked] = useState(null);
   const [service, setService] = useState(() => (new Date().getHours() < 16 ? 'midi' : 'soir'));
+  const [date, setDate] = useState(today());
 
-  const t = today();
   const { ordered, couv } = useMemo(() => {
     const list = reservations.filter(
-      (r) => r.status === 'validated' && r.date === t && periodOf(r.heure) === service
+      (r) => r.status === 'validated' && r.date === date && periodOf(r.heure) === service
     );
     const actifs = list.filter((r) => !isDone(r.presence)).sort(byNom);
     const finis = list.filter((r) => isDone(r.presence)).sort(byNom);
     return { ordered: [...actifs, ...finis], couv: list.reduce((s, r) => s + Number(r.couverts), 0) };
-  }, [reservations, t, service]);
+  }, [reservations, date, service]);
 
   const setPresence = async (r, presence) => {
     await updateReservation(r.id, { presence });
@@ -55,7 +56,7 @@ export default function Arrivee() {
   return (
     <div className="page agenda">
       <div className="agenda-head">
-        <div className="arr-headline">{fmtLong(t)}</div>
+        <DateStepper date={date} setDate={setDate} />
         <div className="arr-head-row">
           <div className="seg">
             {['midi', 'soir'].map((s) => (
