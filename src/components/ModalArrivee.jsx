@@ -34,7 +34,7 @@ export default function ModalArrivee({ reservation: r, isDirecteur, onAction, on
 
         <div className="arr-modal-actions">
           <button className="btn btn--present" disabled={p !== null} onClick={() => onAction('present')}>Arrivé</button>
-          <button className="btn btn--validate" disabled={!(p === null || p === 'present')} onClick={() => onAction('validated')}>Validé</button>
+          <button className="btn btn--validate" disabled={!(p === null || p === 'present')} onClick={() => onAction('validated')}>Installé</button>
           <button className="btn btn--reject" disabled={!(isDirecteur && p === null)} onClick={() => onAction('noshow')}>No show</button>
           <button className="btn btn--annule" disabled={!(isDirecteur && (p === null || p === 'present'))} onClick={() => onAction('annule')}>Annulé</button>
         </div>
