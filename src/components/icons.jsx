@@ -17,12 +17,22 @@ export function PlusIcon({ className }) {
   );
 }
 
-// Table (vue de côté) : plateau + pieds
+// Table isométrique (plein, currentColor) — d'après le picto fourni
 export function TableIcon({ className }) {
   return (
-    <svg className={className} {...base}>
-      <path d="M2.5 8.5h19" strokeWidth={2.2} />
-      <path d="M6 8.5V19M18 8.5V19" />
+    <svg
+      className={className}
+      viewBox="0 0 48 48"
+      fill="currentColor"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      {/* plateau */}
+      <path d="M3 24 L27 11 L45 22 L21 35 Z" />
+      {/* pieds (effilés) */}
+      <path d="M3 23 L8.5 25.5 L6.5 46 L2.5 44 Z" />
+      <path d="M18 33.5 L24 36 L22 48 L19 47 Z" />
+      <path d="M42 21.5 L46 23.5 L44 45 L41 44 Z" />
+      <path d="M25 12 L30 14 L29 32 L27 31 Z" />
     </svg>
   );
 }

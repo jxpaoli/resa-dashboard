@@ -1,28 +1,51 @@
 import { useMemo } from 'react';
 import { useReservations } from '../hooks/useReservations.js';
 import { updateReservation } from '../utils/supabase.js';
+import { useAuth } from '../context/AuthContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 import { TableIcon, CouvertIcon } from '../components/icons.jsx';
 
-// Rang de tri par état de présence (cf. brief) :
-// 1. présent (arrivé, service pas encore validé)
-// 2. pas encore arrivé
-// 3. validé (en bas, opacité réduite)
-const rank = (p) => (p === 'present' ? 0 : p === 'validated' ? 2 : 1);
+// États de présence :
+//   null        -> en attente        (haut, blanc)
+//   'present'   -> arrivé en attente (haut, vert, badge)
+//   'validated' -> installé          (bas, vert)
+//   'noshow'    -> no show           (bas, rouge)   [directeur]
+//   'annule'    -> annulé            (bas, orange)  [directeur]
+const HAUT = new Set([null, undefined, 'present']);
+const BADGE = {
+  present: ['Arrivé en attente', 'arr-badge--present'],
+  installe: ['Installé', 'arr-badge--installe'],
+  noshow: ['No show', 'arr-badge--noshow'],
+  annule: ['Annulé', 'arr-badge--annule'],
+};
+const stateOf = (p) =>
+  p === 'present' ? 'present'
+  : p === 'validated' ? 'installe'
+  : p === 'noshow' ? 'noshow'
+  : p === 'annule' ? 'annule'
+  : 'attente';
 
 export default function Arrivee() {
   const { reservations, loading } = useReservations();
+  const { isDirecteur } = useAuth();
   const { notify } = useToast();
 
-  const liste = useMemo(() => {
-    return reservations
-      .filter((r) => r.status === 'validated' && r.numero_table != null)
-      .sort((a, b) => rank(a.presence) - rank(b.presence) || (a.heure || '').localeCompare(b.heure || ''));
+  const ordered = useMemo(() => {
+    const liste = reservations.filter((r) => r.status === 'validated' && r.numero_table != null);
+    // Haut : non validés (attente + arrivés) triés par nom (alphabétique)
+    const haut = liste
+      .filter((r) => HAUT.has(r.presence ?? null))
+      .sort((a, b) => (a.nom || '').localeCompare(b.nom || '', 'fr'));
+    // Bas : traités, ordre chronologique (ordre de traitement)
+    const bas = liste
+      .filter((r) => !HAUT.has(r.presence ?? null))
+      .sort((a, b) => (a.updated_at || '').localeCompare(b.updated_at || ''));
+    return [...haut, ...bas];
   }, [reservations]);
 
   const marquer = async (r, presence, msg) => {
     await updateReservation(r.id, { presence });
-    notify(msg, { type: 'success' });
+    notify(msg, { type: 'info' });
   };
 
   return (
@@ -34,43 +57,54 @@ export default function Arrivee() {
 
       {loading ? (
         <p className="muted">Chargement…</p>
-      ) : liste.length === 0 ? (
+      ) : ordered.length === 0 ? (
         <p className="muted">Aucune réservation prête à l'arrivée.</p>
       ) : (
         <div className="tiles">
-          {liste.map((r) => {
-            const state = r.presence === 'validated' ? 'valide' : r.presence === 'present' ? 'present' : 'attente';
+          {ordered.map((r) => {
+            const state = stateOf(r.presence);
+            const badge = BADGE[state];
             return (
               <div key={r.id} className={`arr-tile arr-tile--${state}`}>
-                <div className="arr-tile__main">
-                  <div className="arr-tile__table">
-                    <TableIcon className="arr-tile__tableic" />
-                    <span>{r.numero_table}</span>
+                <div className="arr-tile__body">
+                  <div className="arr-tile__tabletag">
+                    <TableIcon className="ic-sm" />
+                    {r.numero_table}
                   </div>
-                  <div className="arr-tile__info">
-                    <div className="arr-tile__nom">{r.nom}</div>
-                    <div className="arr-tile__meta">
-                      {r.date} · {r.heure} · <CouvertIcon className="ic-sm" />{r.couverts}
-                    </div>
+                  <div className="arr-tile__nom">{r.nom}</div>
+                  <div className="arr-tile__meta">
+                    {r.heure} · <CouvertIcon className="ic-sm" />{r.couverts} couv.
                   </div>
-                  {r.presence === 'present' && <span className="tag tag--live">Arrivé</span>}
-                  {r.presence === 'validated' && <span className="tag tag--ok">Service OK</span>}
+                  {badge && <span className={`arr-badge ${badge[1]}`}>{badge[0]}</span>}
                 </div>
 
-                {r.presence !== 'validated' && (
+                {state === 'attente' && (
                   <div className="arr-tile__actions">
-                    <button
-                      className="btn btn--present"
-                      disabled={r.presence === 'present'}
-                      onClick={() => marquer(r, 'present', `${r.nom} marqué arrivé`)}
-                    >
-                      Arrivé
-                    </button>
-                    <button
-                      className="btn btn--validate"
-                      onClick={() => marquer(r, 'validated', `${r.nom} — service validé`)}
-                    >
-                      Validation
+                    <div className="arr-tile__row">
+                      <button className="btn btn--present" onClick={() => marquer(r, 'present', `${r.nom} — arrivé`)}>
+                        Arrivé
+                      </button>
+                      <button className="btn btn--validate" onClick={() => marquer(r, 'validated', `${r.nom} — installé`)}>
+                        Validé
+                      </button>
+                    </div>
+                    {isDirecteur && (
+                      <div className="arr-tile__row">
+                        <button className="btn btn--reject" onClick={() => marquer(r, 'noshow', `${r.nom} — no show`)}>
+                          No show
+                        </button>
+                        <button className="btn btn--annule" onClick={() => marquer(r, 'annule', `${r.nom} — annulé`)}>
+                          Annulé
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {state === 'present' && (
+                  <div className="arr-tile__actions">
+                    <button className="btn btn--validate btn--block" onClick={() => marquer(r, 'validated', `${r.nom} — installé`)}>
+                      Validé
                     </button>
                   </div>
                 )}
