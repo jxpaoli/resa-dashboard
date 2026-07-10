@@ -98,25 +98,25 @@ function PlaceTile({ r, onPick }) {
   const meta = remiseMeta(r.remise) || REMISE_INDEFINIE;
   const placed = r.numero_table != null;
   return (
-    <button
-      className={`place-tile ${placed ? 'is-placed' : ''}`}
-      style={{ borderColor: meta.color }}
-      onClick={() => onPick(r)}
-    >
-      <div className="place-tile__top">
-        <span className="place-tile__h">{r.heure}</span>
-        {placed && (
-          <span className="place-tile__badge">
-            <TableIcon className="ic-sm" />
-            {r.numero_table}
-          </span>
-        )}
-      </div>
-      <div className="place-tile__nom">{r.nom}</div>
-      <div className="place-tile__cov">
-        <CouvertIcon className="ic-sm" />
-        {r.couverts} couv.
-      </div>
-    </button>
+    <div className="place-wrap">
+      {/* tranche de couleur = remise, dépasse derrière la tuile à droite */}
+      <span className="place-strip" style={{ background: meta.color }} aria-hidden="true" />
+      <button className="place-tile" onClick={() => onPick(r)}>
+        <div className="place-tile__top">
+          <span className="place-tile__h">{r.heure}</span>
+          {placed && (
+            <span className="place-tile__badge">
+              <TableIcon className="ic-sm" />
+              {String(r.numero_table).padStart(3, '0')}
+            </span>
+          )}
+        </div>
+        <div className="place-tile__nom">{r.nom}</div>
+        <div className="place-tile__cov">
+          <CouvertIcon className="ic-sm" />
+          {r.couverts} couv.
+        </div>
+      </button>
+    </div>
   );
 }
