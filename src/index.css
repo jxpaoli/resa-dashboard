@@ -294,6 +294,10 @@ textarea.field__input { resize: vertical; }
 .arr-tile__actions { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
 .arr-tile__row { display: flex; gap: 10px; }
 
+.arr-headline { font-weight: 800; font-size: 16px; }
+.arr-modal-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0 10px; }
+.arr-modal-actions .btn { flex: none; width: 100%; }
+
 .arr-badge { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
 .arr-badge--present  { background: #d1fae5; color: #065f46; }
 .arr-badge--installe { background: #a7f3d0; color: #065f46; }

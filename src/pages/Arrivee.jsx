@@ -1,118 +1,118 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useReservations } from '../hooks/useReservations.js';
 import { updateReservation } from '../utils/supabase.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 import { TableIcon, CouvertIcon } from '../components/icons.jsx';
+import ModalArrivee from '../components/ModalArrivee.jsx';
+import { byHeure } from '../utils/constants.js';
 
-// États de présence :
-//   null        -> en attente        (haut, blanc)
-//   'present'   -> arrivé en attente (haut, vert, badge)
-//   'validated' -> installé          (bas, vert)
-//   'noshow'    -> no show           (bas, rouge)   [directeur]
-//   'annule'    -> annulé            (bas, orange)  [directeur]
-const HAUT = new Set([null, undefined, 'present']);
-const BADGE = {
-  present: ['Arrivé en attente', 'arr-badge--present'],
-  installe: ['Installé', 'arr-badge--installe'],
+const pad = (n) => String(n).padStart(2, '0');
+const today = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+};
+const periodOf = (h) => ((h || '') < '16:00' ? 'midi' : 'soir');
+const fmtLong = (dateStr) => {
+  const d = new Date(dateStr + 'T00:00:00');
+  const s = d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+  return s.charAt(0).toUpperCase() + s.slice(1);
+};
+const STATUS = {
+  present: ['Arrivé', 'arr-badge--present'],
+  validated: ['Installé', 'arr-badge--installe'],
   noshow: ['No show', 'arr-badge--noshow'],
   annule: ['Annulé', 'arr-badge--annule'],
 };
-const stateOf = (p) =>
-  p === 'present' ? 'present'
-  : p === 'validated' ? 'installe'
-  : p === 'noshow' ? 'noshow'
-  : p === 'annule' ? 'annule'
-  : 'attente';
+const LABELS = { present: 'arrivé', validated: 'installé', noshow: 'no show', annule: 'annulé', null: 'remis en attente' };
 
+// Page ARRIVÉE (Staff + Directeur) : les résas validées du jour, modèle Liste.
+// Clic sur une tuile → modal avec les boutons d'action + la note.
 export default function Arrivee() {
   const { reservations, loading } = useReservations();
   const { isDirecteur } = useAuth();
   const { notify } = useToast();
+  const [picked, setPicked] = useState(null);
 
-  const ordered = useMemo(() => {
-    const liste = reservations.filter((r) => r.status === 'validated' && r.numero_table != null);
-    // Haut : non validés (attente + arrivés) triés par nom (alphabétique)
-    const haut = liste
-      .filter((r) => HAUT.has(r.presence ?? null))
-      .sort((a, b) => (a.nom || '').localeCompare(b.nom || '', 'fr'));
-    // Bas : traités, ordre chronologique (ordre de traitement)
-    const bas = liste
-      .filter((r) => !HAUT.has(r.presence ?? null))
-      .sort((a, b) => (a.updated_at || '').localeCompare(b.updated_at || ''));
-    return [...haut, ...bas];
-  }, [reservations]);
+  const t = today();
+  const jour = useMemo(() => {
+    const list = reservations.filter((r) => r.status === 'validated' && r.date === t);
+    const midi = list.filter((r) => periodOf(r.heure) === 'midi').sort(byHeure);
+    const soir = list.filter((r) => periodOf(r.heure) === 'soir').sort(byHeure);
+    return {
+      midi,
+      soir,
+      couvMidi: midi.reduce((s, r) => s + Number(r.couverts), 0),
+      couvSoir: soir.reduce((s, r) => s + Number(r.couverts), 0),
+    };
+  }, [reservations, t]);
 
-  const marquer = async (r, presence, msg) => {
+  const setPresence = async (r, presence) => {
     await updateReservation(r.id, { presence });
-    notify(msg, { type: 'info' });
+    notify(`${r.nom} — ${LABELS[presence] ?? 'mis à jour'}`, { type: 'info' });
   };
 
+  const total = jour.midi.length + jour.soir.length;
+
   return (
-    <div className="page">
-      <header className="page__header">
-        <h1 className="page__title">Liste d'arrivée</h1>
-        <p className="page__sub">Réservations validées avec table attribuée.</p>
-      </header>
+    <div className="page agenda">
+      <div className="agenda-head">
+        <div className="arr-headline">{fmtLong(t)}</div>
+        <div className="agenda-recap">
+          Midi : <strong>{jour.couvMidi}</strong> couv · Soir : <strong>{jour.couvSoir}</strong> couv
+        </div>
+      </div>
 
       {loading ? (
-        <p className="muted">Chargement…</p>
-      ) : ordered.length === 0 ? (
-        <p className="muted">Aucune réservation prête à l'arrivée.</p>
+        <p className="muted" style={{ marginTop: 16 }}>Chargement…</p>
+      ) : total === 0 ? (
+        <p className="muted" style={{ marginTop: 16 }}>Aucune réservation aujourd'hui.</p>
       ) : (
-        <div className="tiles">
-          {ordered.map((r) => {
-            const state = stateOf(r.presence);
-            const badge = BADGE[state];
-            return (
-              <div key={r.id} className={`arr-tile arr-tile--${state}`}>
-                <div className="arr-tile__body">
-                  <div className="arr-tile__tabletag">
-                    <TableIcon className="ic-sm" />
-                    {r.numero_table}
-                  </div>
-                  <div className="arr-tile__nom">{r.nom}</div>
-                  <div className="arr-tile__meta">
-                    {r.heure} · <CouvertIcon className="ic-sm" />{r.couverts} couv.
-                  </div>
-                  {badge && <span className={`arr-badge ${badge[1]}`}>{badge[0]}</span>}
-                </div>
+        <>
+          {jour.midi.length > 0 && (
+            <div className="agenda-svc">
+              <div className="agenda-svc-label">Midi</div>
+              {jour.midi.map((r) => <ArrRow key={r.id} r={r} onOpen={setPicked} />)}
+            </div>
+          )}
+          {jour.midi.length > 0 && jour.soir.length > 0 && <div className="agenda-svc-sep" />}
+          {jour.soir.length > 0 && (
+            <div className="agenda-svc">
+              <div className="agenda-svc-label">Soir</div>
+              {jour.soir.map((r) => <ArrRow key={r.id} r={r} onOpen={setPicked} />)}
+            </div>
+          )}
+        </>
+      )}
 
-                {state === 'attente' && (
-                  <div className="arr-tile__actions">
-                    <div className="arr-tile__row">
-                      <button className="btn btn--present" onClick={() => marquer(r, 'present', `${r.nom} — arrivé`)}>
-                        Arrivé
-                      </button>
-                      <button className="btn btn--validate" onClick={() => marquer(r, 'validated', `${r.nom} — installé`)}>
-                        Validé
-                      </button>
-                    </div>
-                    {isDirecteur && (
-                      <div className="arr-tile__row">
-                        <button className="btn btn--reject" onClick={() => marquer(r, 'noshow', `${r.nom} — no show`)}>
-                          No show
-                        </button>
-                        <button className="btn btn--annule" onClick={() => marquer(r, 'annule', `${r.nom} — annulé`)}>
-                          Annulé
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {state === 'present' && (
-                  <div className="arr-tile__actions">
-                    <button className="btn btn--validate btn--block" onClick={() => marquer(r, 'validated', `${r.nom} — installé`)}>
-                      Validé
-                    </button>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+      {picked && (
+        <ModalArrivee
+          reservation={picked}
+          isDirecteur={isDirecteur}
+          onAction={async (presence) => { await setPresence(picked, presence); setPicked(null); }}
+          onClose={() => setPicked(null)}
+        />
       )}
     </div>
+  );
+}
+
+function ArrRow({ r, onOpen }) {
+  const st = STATUS[r.presence];
+  const placed = r.numero_table != null;
+  return (
+    <button className="agenda-row" onClick={() => onOpen(r)}>
+      <span className="agenda-row__h">{r.heure}</span>
+      <span className="agenda-row__main">
+        <span className="agenda-row__nom">{r.nom}{r.prenom ? ` ${r.prenom}` : ''}</span>
+        {st && <span className={`arr-badge ${st[1]}`}>{st[0]}</span>}
+      </span>
+      <span className="rbadge rbadge--couv"><CouvertIcon className="ic-sm" />{r.couverts}</span>
+      {placed ? (
+        <span className="rbadge rbadge--table"><TableIcon className="ic-sm" />{String(r.numero_table).padStart(3, '0')}</span>
+      ) : (
+        <span className="rbadge rbadge--empty">—</span>
+      )}
+    </button>
   );
 }
