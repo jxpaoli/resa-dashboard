@@ -295,8 +295,30 @@ textarea.field__input { resize: vertical; }
 .arr-tile__row { display: flex; gap: 10px; }
 
 .arr-headline { font-weight: 800; font-size: 16px; }
+.arr-head-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.arr-head-recap { font-size: 14px; font-weight: 600; color: var(--ink-soft); }
 .arr-modal-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0 10px; }
 .arr-modal-actions .btn { flex: none; width: 100%; }
+
+/* Tuiles Arrivée (hautes) — nom + table = clés, couverts moyen, heure secondaire */
+.arr2-list { margin-top: 12px; }
+.ic-md { width: 22px; height: 22px; }
+.arr2-tile {
+  display: flex; flex-direction: column; gap: 12px;
+  background: var(--tile); border: 1px solid var(--border); border-radius: 14px;
+  padding: 15px 15px; margin-bottom: 10px; cursor: pointer; box-shadow: var(--shadow);
+}
+.arr2-tile:active { transform: scale(.995); }
+.arr2-tile.is-done { background: #f2f1ee; border-color: #e6e4de; filter: grayscale(1); opacity: .55; }
+.arr2-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.arr2-nom { font-weight: 600; font-size: 20px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.arr2-table { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; font-size: 22px; color: var(--ink); flex-shrink: 0; }
+.arr2-table--none { color: var(--muted); font-weight: 600; }
+.arr2-bottom { display: flex; align-items: center; gap: 12px; }
+.arr2-couv { display: inline-flex; align-items: center; gap: 5px; font-weight: 700; font-size: 15px; color: var(--ink); }
+.arr2-heure { font-size: 13px; color: var(--muted); }
+.arr2-spacer { flex: 1; }
+.arr2-install { flex: none; width: auto; padding: 9px 20px; font-size: 15px; }
 
 .arr-badge { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
 .arr-badge--present  { background: #d1fae5; color: #065f46; }
