@@ -349,13 +349,19 @@ textarea.field__input { resize: vertical; }
 .agenda-svc-sep { height: 1px; background: var(--border); margin: 12px 0; }
 
 /* Colonnes fixes → badges alignés d'une ligne à l'autre */
+.agenda-rowwrap { position: relative; margin-bottom: 8px; }
+/* tranche de couleur (remise) qui dépasse derrière la tuile, à droite */
+.agenda-strip {
+  position: absolute; z-index: 0; top: 7px; bottom: 7px; right: -5px; width: 13px;
+  border-radius: 4px;
+}
 .agenda-row {
+  position: relative; z-index: 1;
   display: grid; grid-template-columns: 44px 1fr 54px 62px;
   align-items: center; gap: 8px; width: 100%; text-align: left;
-  background: var(--surface); border: 2px solid var(--border); border-radius: 12px;
-  padding: 10px 12px; margin-bottom: 8px; cursor: pointer; font-family: inherit; box-shadow: var(--shadow);
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  padding: 10px 12px; cursor: pointer; font-family: inherit; box-shadow: var(--shadow);
 }
-.agenda-row.is-placed { background: #ecfdf5; } /* table attribuée = vert clair (blanc sinon) */
 .agenda-row:active { transform: scale(.995); }
 .agenda-row__h { font-weight: 400; font-size: 14px; color: var(--ink-soft); }
 .agenda-row__main { display: flex; align-items: center; gap: 8px; min-width: 0; }

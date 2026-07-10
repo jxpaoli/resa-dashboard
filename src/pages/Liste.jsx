@@ -182,25 +182,25 @@ export default function Liste() {
 }
 
 function ResaRow({ r, onEdit }) {
-  const meta = remiseMeta(r.remise) || REMISE_INDEFINIE; // bordure = remise
+  const meta = remiseMeta(r.remise) || REMISE_INDEFINIE;
   const placed = r.numero_table != null;
   return (
-    <button
-      className={`agenda-row ${placed ? 'is-placed' : ''}`}
-      style={{ borderColor: meta.color }}
-      onClick={() => onEdit(r)}
-    >
-      <span className="agenda-row__h">{r.heure}</span>
-      <span className="agenda-row__main">
-        <span className="agenda-row__nom">{r.nom}{r.prenom ? ` ${r.prenom}` : ''}</span>
-        {r.evenement && <span className="rbadge rbadge--evt">🎉</span>}
-      </span>
-      <span className="rbadge rbadge--couv"><CouvertIcon className="ic-sm" />{r.couverts}</span>
-      {placed ? (
-        <span className="rbadge rbadge--table"><TableIcon className="ic-sm" />{String(r.numero_table).padStart(3, '0')}</span>
-      ) : (
-        <span className="rbadge rbadge--empty">—</span>
-      )}
-    </button>
+    <div className="agenda-rowwrap">
+      {/* tranche de couleur = remise, dépasse derrière la tuile à droite */}
+      <span className="agenda-strip" style={{ background: meta.color }} aria-hidden="true" />
+      <button className="agenda-row" onClick={() => onEdit(r)}>
+        <span className="agenda-row__h">{r.heure}</span>
+        <span className="agenda-row__main">
+          <span className="agenda-row__nom">{r.nom}{r.prenom ? ` ${r.prenom}` : ''}</span>
+          {r.evenement && <span className="rbadge rbadge--evt">🎉</span>}
+        </span>
+        <span className="rbadge rbadge--couv"><CouvertIcon className="ic-sm" />{r.couverts}</span>
+        {placed ? (
+          <span className="rbadge rbadge--table"><TableIcon className="ic-sm" />{String(r.numero_table).padStart(3, '0')}</span>
+        ) : (
+          <span className="rbadge rbadge--empty">—</span>
+        )}
+      </button>
+    </div>
   );
 }
