@@ -161,14 +161,14 @@ export default function Liste() {
             {i > 0 && <div className="agenda-day-sep" />}
             {d.midi.length > 0 && (
               <div className="agenda-svc" ref={setBlockRef(`${d.date}|midi`)}>
-                <div className="agenda-svc-label">Midi</div>
+                <div className="agenda-svc-label">{fmtLong(d.date)} — Midi</div>
                 {d.midi.map((r) => <ResaRow key={r.id} r={r} onEdit={setEditResa} />)}
               </div>
             )}
             {d.midi.length > 0 && d.soir.length > 0 && <div className="agenda-svc-sep" />}
             {d.soir.length > 0 && (
               <div className="agenda-svc" ref={setBlockRef(`${d.date}|soir`)}>
-                <div className="agenda-svc-label">Soir</div>
+                <div className="agenda-svc-label">{fmtLong(d.date)} — Soir</div>
                 {d.soir.map((r) => <ResaRow key={r.id} r={r} onEdit={setEditResa} />)}
               </div>
             )}
