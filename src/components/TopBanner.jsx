@@ -1,11 +1,20 @@
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Sprig } from './Logo.jsx';
+import { useReservations } from '../hooks/useReservations.js';
 
-// Bandeau haut : rond utilisateur (à gauche) + logo du restaurant (centré).
-// Clic sur le rond → petit menu avec Déconnexion.
+// Bandeau haut : rond utilisateur (gauche) + logo (centre) + cloche « à valider » (droite).
+// La cloche est présente sur toutes les pages et mène à la page de validation.
 export default function TopBanner({ user, onLogout }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
+  const navigate = useNavigate();
+  const { reservations } = useReservations();
+
+  const isDir = user.role === 'directeur';
+  const aValider = isDir
+    ? reservations.filter((r) => r.status === 'proposed' && r.source === 'staff').length
+    : 0;
 
   useEffect(() => {
     const onDoc = (e) => {
@@ -47,7 +56,19 @@ export default function TopBanner({ user, onLogout }) {
         <span className="topbanner__word">Aux Terrasses de Troinex</span>
       </div>
 
-      <div className="topbanner__spacer" />
+      {isDir ? (
+        <button
+          className="topbanner__notif"
+          onClick={() => navigate('/validation')}
+          title={`${aValider} réservation(s) à valider`}
+          aria-label="À valider"
+        >
+          🔔
+          {aValider > 0 && <span className="topbanner__notif-count">{aValider}</span>}
+        </button>
+      ) : (
+        <div className="topbanner__spacer" />
+      )}
     </header>
   );
 }

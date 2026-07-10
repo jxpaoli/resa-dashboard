@@ -9,6 +9,7 @@ import Login from './pages/Login.jsx';
 import Arrivee from './pages/Arrivee.jsx';
 import Liste from './pages/Liste.jsx';
 import Tables from './pages/Tables.jsx';
+import Validation from './pages/Validation.jsx';
 
 export default function App() {
   const { user, logout } = useAuth();
@@ -52,6 +53,14 @@ export default function App() {
             element={
               <ProtectedRoute role="directeur">
                 <Tables />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/validation"
+            element={
+              <ProtectedRoute role="directeur">
+                <Validation />
               </ProtectedRoute>
             }
           />

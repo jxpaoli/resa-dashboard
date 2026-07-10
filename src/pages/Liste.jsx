@@ -33,11 +33,6 @@ export default function Liste() {
     else delete blockRefs.current[key];
   };
 
-  const aValider = useMemo(
-    () => reservations.filter((r) => r.status === 'proposed' && r.source === 'staff').length,
-    [reservations]
-  );
-
   const days = useMemo(() => {
     const q = query.trim().toLowerCase();
     const valid = reservations.filter(
@@ -133,7 +128,6 @@ export default function Liste() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
-        {aValider > 0 && <div className="agenda-tovalidate">🔔 {aValider} à valider</div>}
 
         <div className="agenda-daybar">
           <button className="stepper__btn stepper__btn--sm" onClick={() => gotoDay(-1)} disabled={curIdx <= 0}>−</button>

@@ -19,7 +19,7 @@ export default function AppNav({ user, onNew }) {
       {isDir && (
         <NavLink to="/tables" className={linkClass}>
           <TableIcon className="ic" />
-          <span>Tables</span>
+          <span>Plan</span>
         </NavLink>
       )}
       <NavLink to="/arrivee" className={linkClass}>

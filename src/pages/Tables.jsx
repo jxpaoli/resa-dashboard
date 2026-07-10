@@ -40,7 +40,7 @@ export default function Tables() {
   return (
     <div className="page">
       <header className="page__header">
-        <h1 className="page__title">Tables</h1>
+        <h1 className="page__title">Plan</h1>
       </header>
 
       <ServiceFilters date={date} setDate={setDate} service={service} setService={setService} />
