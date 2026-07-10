@@ -1,35 +1,74 @@
 // ---------------------------------------------------------------------------
-// COUCHE D'ACCÈS DONNÉES
+// COUCHE D'ACCÈS DONNÉES — bascule automatique mock (localStorage) ↔ Supabase.
+// Les pages n'importent QUE ce fichier.
 // ---------------------------------------------------------------------------
-// Aujourd'hui : redirige vers le store mock (localStorage).
-// Demain (Supabase réel) : garder EXACTEMENT les mêmes signatures de fonctions
-// ci-dessous, mais remplacer le corps par des appels @supabase/supabase-js.
-// Les pages/composants n'importent QUE ce fichier — rien d'autre à changer.
-//
-// Exemple de bascule :
-//   import { createClient } from '@supabase/supabase-js';
-//   const supabase = createClient(
-//     import.meta.env.VITE_SUPABASE_URL,
-//     import.meta.env.VITE_SUPABASE_ANON_KEY
-//   );
-//   export async function getReservations() {
-//     const { data } = await supabase.from('reservations').select('*');
-//     return data;
-//   }
-// ---------------------------------------------------------------------------
+import { supabase, APP_ID, isMock } from './supabaseClient.js';
+import { db as mockDb, subscribe as mockSubscribe } from '../data/store.js';
 
-import { db, subscribe as storeSubscribe } from '../data/store.js';
+export { isMock };
 
-export const isMock =
-  !import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY;
+// --- Cache local (mode réel) : sert tableConflict de façon synchrone ---------
+let cache = [];
+const listeners = new Set();
+const emit = () => listeners.forEach((fn) => fn());
 
-export const subscribeToChanges = storeSubscribe;
+let channel = null;
+function ensureRealtime() {
+  if (isMock || channel) return;
+  channel = supabase
+    .channel(`resa-${APP_ID}`)
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'reservations', filter: `app_id=eq.${APP_ID}` },
+      () => emit() // un abonné (hook) va refetch → met le cache à jour
+    )
+    .subscribe();
+}
 
-export const getReservations = () => db.getReservations();
-export const createReservation = (data) => db.createReservation(data);
-export const updateReservation = (id, patch) => db.updateReservation(id, patch);
-export const tableConflict = (numero, date, service, exceptId) =>
-  db.tableConflict(numero, date, service, exceptId);
+export function subscribeToChanges(fn) {
+  if (isMock) return mockSubscribe(fn);
+  listeners.add(fn);
+  ensureRealtime();
+  return () => listeners.delete(fn);
+}
 
-export const findUser = (email, password) => db.findUser(email, password);
-export const getUserById = (id) => db.getUserById(id);
+// --- Réservations -----------------------------------------------------------
+export async function getReservations() {
+  if (isMock) return mockDb.getReservations();
+  const { data, error } = await supabase.from('reservations').select('*').eq('app_id', APP_ID);
+  if (error) throw error;
+  cache = data || [];
+  return cache;
+}
+
+export async function createReservation(values) {
+  if (isMock) return mockDb.createReservation(values);
+  const { data, error } = await supabase
+    .from('reservations')
+    .insert({ ...values, app_id: APP_ID })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateReservation(id, patch) {
+  if (isMock) return mockDb.updateReservation(id, patch);
+  const { data, error } = await supabase.from('reservations').update(patch).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+}
+
+// Doublon N° table (même date + service, hors résa courante) — synchrone via cache
+export function tableConflict(numero, date, service, exceptId) {
+  if (isMock) return mockDb.tableConflict(numero, date, service, exceptId);
+  return cache.some(
+    (r) =>
+      r.id !== exceptId &&
+      r.numero_table != null &&
+      Number(r.numero_table) === Number(numero) &&
+      r.date === date &&
+      r.service === service &&
+      r.status === 'validated'
+  );
+}
