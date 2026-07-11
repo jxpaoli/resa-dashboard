@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { useState, useRef } from 'react';
+import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from './context/AuthContext.jsx';
 import AppNav from './components/AppNav.jsx';
 import TopBanner from './components/TopBanner.jsx';
@@ -15,7 +15,9 @@ import Clients from './pages/Clients.jsx';
 export default function App() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [formOpen, setFormOpen] = useState(false);
+  const touch = useRef(null);
 
   const handleLogout = () => {
     logout();
@@ -25,12 +27,34 @@ export default function App() {
 
   const home = !user ? '/login' : user.role === 'directeur' ? '/liste' : '/arrivee';
 
+  // Swipe horizontal (mobile) → page précédente / suivante
+  const pages = user?.role === 'directeur'
+    ? ['/liste', '/tables', '/arrivee', '/clients', '/validation']
+    : ['/arrivee'];
+  const onTouchStart = (e) => {
+    const t = e.touches[0];
+    touch.current = { x: t.clientX, y: t.clientY };
+  };
+  const onTouchEnd = (e) => {
+    const start = touch.current;
+    touch.current = null;
+    if (!start || formOpen || document.querySelector('.modal-overlay')) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - start.x;
+    const dy = t.clientY - start.y;
+    if (Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 1.6) return; // swipe horizontal net
+    const idx = pages.indexOf(location.pathname);
+    if (idx < 0) return;
+    const next = dx < 0 ? idx + 1 : idx - 1; // gauche = suivant, droite = précédent
+    if (next >= 0 && next < pages.length) navigate(pages[next]);
+  };
+
   return (
     <div className={`app ${user ? 'app--auth' : ''}`}>
       {user && <TopBanner user={user} onLogout={handleLogout} />}
       {user && <AppNav user={user} onNew={() => setFormOpen(true)} />}
 
-      <main className="app__main">
+      <main className="app__main" onTouchStart={user ? onTouchStart : undefined} onTouchEnd={user ? onTouchEnd : undefined}>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route

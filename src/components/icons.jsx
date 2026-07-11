@@ -73,6 +73,16 @@ export function ArriveeIcon({ className }) {
   );
 }
 
+// Clients (personne)
+export function ClientsIcon({ className }) {
+  return (
+    <svg className={className} {...base}>
+      <circle cx="12" cy="8" r="3.6" />
+      <path d="M4.5 20c0-4 3.6-6.2 7.5-6.2s7.5 2.2 7.5 6.2" />
+    </svg>
+  );
+}
+
 // À valider (check)
 export function CheckIcon({ className }) {
   return (
