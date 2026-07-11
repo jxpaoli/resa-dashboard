@@ -83,7 +83,6 @@ function ValTile({ r, onValider, onRefuser, onEdit }) {
         <div className="val-info">
           <span className="agenda-row__h">{r.heure}</span>
           <span className="val-nom">{r.nom}{r.prenom ? ` ${r.prenom}` : ''}</span>
-          {r.evenement && <span className="rbadge rbadge--evt">🎉</span>}
           <span className="rbadge rbadge--couv"><CouvertIcon className="ic-sm" />{r.couverts}</span>
           {placed ? (
             <span className="rbadge rbadge--table"><TableIcon className="ic-sm" />{pad3(r.numero_table)}</span>

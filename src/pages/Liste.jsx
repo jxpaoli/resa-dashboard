@@ -186,7 +186,6 @@ function ResaRow({ r, onEdit }) {
         <span className="agenda-row__h">{r.heure}</span>
         <span className="agenda-row__main">
           <span className="agenda-row__nom">{r.nom}{r.prenom ? ` ${r.prenom}` : ''}</span>
-          {r.evenement && <span className="rbadge rbadge--evt">🎉</span>}
         </span>
         <span className="rbadge rbadge--couv"><CouvertIcon className="ic-sm" />{r.couverts}</span>
         {placed ? (

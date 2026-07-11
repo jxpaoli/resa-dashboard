@@ -9,7 +9,6 @@ export default function ServiceFilters({ date, setDate, service, setService }) {
         {[
           ['midi', 'Midi'],
           ['soir', 'Soir'],
-          ['evenement', 'Événement'],
         ].map(([s, label]) => (
           <button key={s} className={`seg__btn ${service === s ? 'is-active' : ''}`} onClick={() => setService(s)}>
             {label}
