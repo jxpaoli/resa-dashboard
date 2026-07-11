@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '../context/ToastContext.jsx';
 import { searchClients } from '../utils/supabase.js';
-import {
-  serviceFromHeure, serviceLabel, REMISES, SLOTS_MIDI, SLOTS_SOIR, TIME_SLOTS,
-} from '../utils/constants.js';
+import { serviceFromHeure, REMISES } from '../utils/constants.js';
 
 const pad = (n) => String(n).padStart(2, '0');
 const today = () => {
@@ -48,7 +46,6 @@ export default function ReservationForm({ initial, submitLabel = 'Enregistrer', 
         }
       : { ...EMPTY }
   );
-  const [event, setEvent] = useState(initial?.evenement || initial?.service === 'evenement' || false);
   const [saving, setSaving] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
   const [showSug, setShowSug] = useState(false);
@@ -85,14 +82,16 @@ export default function ReservationForm({ initial, submitLabel = 'Enregistrer', 
       return { ...f, date: iso };
     });
 
-  const isToday = form.date === today();
-  const slotOk = (t) => !enforceFuture || !isToday || t > nowHM();
-  const midiSlots = SLOTS_MIDI.filter(slotOk);
-  const soirSlots = SLOTS_SOIR.filter(slotOk);
-  const wideSlots = TIME_SLOTS.filter(slotOk);
-  const shown = event ? wideSlots : [...midiSlots, ...soirSlots];
-  const orphan = form.heure && !shown.includes(form.heure) ? form.heure : null; // garde l'heure actuelle en édition
-  const noSlotToday = enforceFuture && isToday && shown.length === 0;
+  // Heure : Midi part de 12:00, Soir de 20:00 ; − / + par pas de 15 min.
+  const curService = form.heure ? serviceFromHeure(form.heure) : null;
+  const setHeure = (v) => setForm((f) => ({ ...f, heure: v }));
+  const stepHeure = (delta) =>
+    setForm((f) => {
+      if (!f.heure) return { ...f, heure: '12:00' };
+      const [h, m] = f.heure.split(':').map(Number);
+      const total = Math.max(0, Math.min(1425, h * 60 + m + delta * 15));
+      return { ...f, heure: `${pad(Math.floor(total / 60))}:${pad(total % 60)}` };
+    });
 
   const touchCouverts = () => setForm((f) => (f.couverts === '' ? { ...f, couverts: '2' } : f));
   const stepCouverts = (delta) =>
@@ -122,8 +121,8 @@ export default function ReservationForm({ initial, submitLabel = 'Enregistrer', 
     const values = {
       ...form,
       couverts: Number(form.couverts),
-      service: event ? 'evenement' : serviceFromHeure(form.heure),
-      evenement: event,
+      service: serviceFromHeure(form.heure),
+      evenement: false,
     };
     setSaving(true);
     try { await onSubmit(values); } finally { setSaving(false); }
@@ -206,35 +205,15 @@ export default function ReservationForm({ initial, submitLabel = 'Enregistrer', 
 
       <div className="field">
         <span className="field__label">Heure *</span>
-        <div className="heure-row">
-          <select className="field__input heure-select" value={form.heure || ''} onChange={set('heure')}>
-            <option value="" disabled>—</option>
-            {orphan && <option value={orphan}>{orphan}</option>}
-            {event ? (
-              wideSlots.map((t) => <option key={t} value={t}>{t}</option>)
-            ) : (
-              <>
-                {midiSlots.length > 0 && (
-                  <optgroup label="Midi">{midiSlots.map((t) => <option key={t} value={t}>{t}</option>)}</optgroup>
-                )}
-                {soirSlots.length > 0 && (
-                  <optgroup label="Soir">{soirSlots.map((t) => <option key={t} value={t}>{t}</option>)}</optgroup>
-                )}
-              </>
-            )}
-          </select>
-          <label className="evt-check">
-            <input type="checkbox" checked={event} onChange={(e) => setEvent(e.target.checked)} />
-            Événement spécial
-          </label>
+        <div className="heure2">
+          <div className="seg heure2__seg">
+            <button type="button" className={`seg__btn ${curService === 'midi' ? 'is-active' : ''}`} onClick={() => setHeure('12:00')}>Midi</button>
+            <button type="button" className={`seg__btn ${curService === 'soir' ? 'is-active' : ''}`} onClick={() => setHeure('20:00')}>Soir</button>
+          </div>
+          <button type="button" className="stepper__btn" onClick={() => stepHeure(-1)} aria-label="− 15 min">−</button>
+          <span className="heure2__val">{form.heure || '—'}</span>
+          <button type="button" className="stepper__btn" onClick={() => stepHeure(1)} aria-label="+ 15 min">+</button>
         </div>
-        {noSlotToday && <p className="hint hint--tight">Plus de créneaux aujourd'hui — choisis un autre jour (+).</p>}
-        {form.heure && (
-          <p className="hint hint--tight">
-            {event ? 'Catégorie : ' : 'Service : '}
-            <strong>{event ? 'Événement' : serviceLabel(serviceFromHeure(form.heure))}</strong>
-          </p>
-        )}
       </div>
 
       <fieldset className="field">

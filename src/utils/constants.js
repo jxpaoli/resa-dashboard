@@ -23,8 +23,8 @@ export const SOURCE_LABELS = {
 export const byHeure = (a, b) => (a.heure || '').localeCompare(b.heure || '');
 
 // Le service (midi / soir) découle de l'heure de la réservation.
-// Frontière : avant 17:00 = midi, à partir de 17:00 = soir.
-export const SERVICE_CUTOFF = '17:00';
+// Frontière : avant 16:00 = midi, à partir de 16:00 = soir (aligné sur l'agenda).
+export const SERVICE_CUTOFF = '16:00';
 export function serviceFromHeure(heure) {
   if (!heure) return 'soir';
   return heure < SERVICE_CUTOFF ? 'midi' : 'soir';
