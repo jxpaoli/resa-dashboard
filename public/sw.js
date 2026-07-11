@@ -21,8 +21,8 @@ self.addEventListener('push', (event) => {
   event.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
-      icon: '/icon.svg',
-      badge: '/icon.svg',
+      icon: '/icon-192.png',
+      badge: '/badge-96.png',
       vibrate: [120, 60, 120],
       tag: 'resa-proposee',
     })
@@ -36,11 +36,11 @@ self.addEventListener('notificationclick', (event) => {
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
       for (const client of list) {
         if ('focus' in client) {
-          client.navigate('/reservations');
+          client.navigate('/validation');
           return client.focus();
         }
       }
-      if (self.clients.openWindow) return self.clients.openWindow('/reservations');
+      if (self.clients.openWindow) return self.clients.openWindow('/validation');
     })
   );
 });

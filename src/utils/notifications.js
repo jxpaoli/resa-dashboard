@@ -32,7 +32,7 @@ export async function showSystemNotification(title, body) {
   if (!('Notification' in window) || Notification.permission !== 'granted') return false;
   try {
     const reg = await navigator.serviceWorker?.getRegistration();
-    if (reg) await reg.showNotification(title, { body, icon: '/icon.svg', badge: '/icon.svg', tag: 'resa-proposee', vibrate: [120, 60, 120] });
+    if (reg) await reg.showNotification(title, { body, icon: '/icon-192.png', badge: '/badge-96.png', tag: 'resa-proposee', vibrate: [120, 60, 120] });
     else new Notification(title, { body });
     return true;
   } catch (e) {
