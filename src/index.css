@@ -40,20 +40,18 @@ body {
 /* ------------------------------- Layout ---------------------------------- */
 .app { min-height: 100%; display: flex; flex-direction: column; overflow-x: clip; }
 .app__main { flex: 1; }
-/* Animation de changement de page (swipe / clic) — glisse + zoom léger + mise au point */
-@keyframes pageInRight {
-  from { opacity: 0; transform: translate3d(38px, 0, 0) scale(.972); filter: blur(8px); }
-  55%  { opacity: 1; }
-  to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); filter: blur(0); }
+/* Transition 3D : la page pivote comme une face de cube (perspective + rotateY, sans flou) */
+@keyframes pageCubeFwd {   /* page suivante : la face arrive par la droite en se dépliant */
+  from { opacity: .28; transform: perspective(1500px) rotateY(-42deg) scale(.9); }
+  to   { opacity: 1;   transform: perspective(1500px) rotateY(0deg)   scale(1); }
 }
-@keyframes pageInLeft {
-  from { opacity: 0; transform: translate3d(-38px, 0, 0) scale(.972); filter: blur(8px); }
-  55%  { opacity: 1; }
-  to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); filter: blur(0); }
+@keyframes pageCubeBack {  /* page précédente : la face arrive par la gauche */
+  from { opacity: .28; transform: perspective(1500px) rotateY(42deg)  scale(.9); }
+  to   { opacity: 1;   transform: perspective(1500px) rotateY(0deg)   scale(1); }
 }
-/* easing « ressort doux » (easeOutQuint) : arrive vite puis se pose en douceur */
-.page-anim--fwd  { animation: pageInRight .42s cubic-bezier(.22, 1, .36, 1); }
-.page-anim--back { animation: pageInLeft  .42s cubic-bezier(.22, 1, .36, 1); }
+/* charnière du côté d'où arrive la page (comme l'arête partagée d'un cube) */
+.page-anim--fwd  { transform-origin: right center; animation: pageCubeFwd .5s cubic-bezier(.34, .89, .32, 1); }
+.page-anim--back { transform-origin: left center;  animation: pageCubeBack .5s cubic-bezier(.34, .89, .32, 1); }
 @media (prefers-reduced-motion: reduce) { .page-anim--fwd, .page-anim--back { animation: none; } }
 /* Connecté : place pour le bandeau haut (56px) et la sidebar (desktop) */
 .app--auth .app__main { padding-top: 56px; }
