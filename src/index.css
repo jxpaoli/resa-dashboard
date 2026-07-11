@@ -40,19 +40,28 @@ body {
 /* ------------------------------- Layout ---------------------------------- */
 .app { min-height: 100%; display: flex; flex-direction: column; overflow-x: clip; }
 .app__main { flex: 1; }
-/* Transition 3D : la page pivote comme une face de cube (perspective + rotateY, sans flou) */
-@keyframes pageCubeFwd {   /* page suivante : la face arrive par la droite en se dépliant */
-  from { opacity: .28; transform: perspective(1500px) rotateY(-42deg) scale(.9); }
-  to   { opacity: 1;   transform: perspective(1500px) rotateY(0deg)   scale(1); }
+/* Changement de page par clic/onglet : fondu léger (le swipe, lui, utilise le cube 3D) */
+@keyframes pageFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.page-anim { animation: pageFade .18s ease; }
+@media (prefers-reduced-motion: reduce) { .page-anim { animation: none; } }
+
+/* --- Cube 3D piloté au doigt (swipe mobile) --- */
+.swipe-wrap { position: relative; }
+.cube-stage {
+  position: fixed; inset: 0; z-index: 25; overflow: hidden;
+  perspective: 1600px; touch-action: none; background: var(--bg);
 }
-@keyframes pageCubeBack {  /* page précédente : la face arrive par la gauche */
-  from { opacity: .28; transform: perspective(1500px) rotateY(42deg)  scale(.9); }
-  to   { opacity: 1;   transform: perspective(1500px) rotateY(0deg)   scale(1); }
+.cube { position: absolute; inset: 0; transform-style: preserve-3d; will-change: transform; }
+.cube-face {
+  position: absolute; inset: 0; overflow: hidden; backface-visibility: hidden;
+  background: var(--bg); box-shadow: 0 0 44px rgba(20, 20, 12, .22);
 }
-/* charnière du côté d'où arrive la page (comme l'arête partagée d'un cube) */
-.page-anim--fwd  { transform-origin: right center; animation: pageCubeFwd .5s cubic-bezier(.34, .89, .32, 1); }
-.page-anim--back { transform-origin: left center;  animation: pageCubeBack .5s cubic-bezier(.34, .89, .32, 1); }
-@media (prefers-reduced-motion: reduce) { .page-anim--fwd, .page-anim--back { animation: none; } }
+.cube-face--front { transform: rotateY(0deg)   translateZ(calc(var(--cube-w) / 2)); }
+.cube-face--next  { transform: rotateY(90deg)  translateZ(calc(var(--cube-w) / 2)); }
+.cube-face--prev  { transform: rotateY(-90deg) translateZ(calc(var(--cube-w) / 2)); }
+/* reproduit la zone de contenu (sous le bandeau de 56px), scroll figé au bon endroit */
+.cube-face__scroll { position: absolute; inset: 0; overflow: hidden; padding-top: 56px; }
+@media (prefers-reduced-motion: reduce) { .cube { transition: none !important; } }
 /* Connecté : place pour le bandeau haut (56px) et la sidebar (desktop) */
 .app--auth .app__main { padding-top: 56px; }
 @media (min-width: 720px) {
