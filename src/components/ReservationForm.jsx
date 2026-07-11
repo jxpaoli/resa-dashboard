@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useToast } from '../context/ToastContext.jsx';
+import { searchClients } from '../utils/supabase.js';
 import {
   serviceFromHeure, serviceLabel, REMISES, SLOTS_MIDI, SLOTS_SOIR, TIME_SLOTS,
 } from '../utils/constants.js';
@@ -49,7 +50,30 @@ export default function ReservationForm({ initial, submitLabel = 'Enregistrer', 
   );
   const [event, setEvent] = useState(initial?.evenement || initial?.service === 'evenement' || false);
   const [saving, setSaving] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSug, setShowSug] = useState(false);
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  // Auto-complétion clients : recherche par nom (débounce)
+  useEffect(() => {
+    const q = form.nom;
+    if (!showSug || !q || q.trim().length < 2) { setSuggestions([]); return; }
+    const t = setTimeout(async () => setSuggestions(await searchClients(q)), 250);
+    return () => clearTimeout(t);
+  }, [form.nom, showSug]);
+
+  const pickClient = (c) => {
+    setForm((f) => ({
+      ...f,
+      civilite: c.civilite || f.civilite,
+      nom: c.nom || '',
+      prenom: c.prenom || '',
+      email: c.email || '',
+      telephone: c.telephone || '',
+    }));
+    setSuggestions([]);
+    setShowSug(false);
+  };
 
   const shiftDate = (delta) =>
     setForm((f) => {
@@ -120,9 +144,29 @@ export default function ReservationForm({ initial, submitLabel = 'Enregistrer', 
       </fieldset>
 
       <div className="field-row">
-        <label className="field">
+        <label className="field field--autocomplete">
           <span className="field__label">Nom *</span>
-          <input className="field__input" value={form.nom} onChange={set('nom')} autoFocus />
+          <input
+            className="field__input"
+            value={form.nom}
+            onChange={(e) => { set('nom')(e); setShowSug(true); }}
+            onFocus={() => setShowSug(true)}
+            onBlur={() => setTimeout(() => setShowSug(false), 150)}
+            autoFocus
+            autoComplete="off"
+          />
+          {showSug && suggestions.length > 0 && (
+            <ul className="autocomplete">
+              {suggestions.map((c) => (
+                <li key={c.id}>
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => pickClient(c)}>
+                    <strong>{c.nom}{c.prenom ? ` ${c.prenom}` : ''}</strong>
+                    <span>{c.telephone || c.email || ''}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </label>
         <label className="field">
           <span className="field__label">Prénom</span>

@@ -59,6 +59,30 @@ export async function updateReservation(id, patch) {
   return data;
 }
 
+// --- Clients ----------------------------------------------------------------
+export async function searchClients(query) {
+  if (isMock || !query || query.trim().length < 2) return [];
+  const q = query.trim().replace(/[,()*%]/g, ' ');
+  const { data } = await supabase
+    .from('clients').select('*').eq('app_id', APP_ID)
+    .or(`nom.ilike.*${q}*,prenom.ilike.*${q}*,telephone.ilike.*${q}*`)
+    .order('nom').limit(6);
+  return data || [];
+}
+
+export async function getClients() {
+  if (isMock) return [];
+  const { data } = await supabase.from('clients').select('*').eq('app_id', APP_ID).order('nom');
+  return data || [];
+}
+
+export async function updateClient(id, patch) {
+  if (isMock) return null;
+  const { data, error } = await supabase.from('clients').update(patch).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+}
+
 // Doublon N° table (même date + service, hors résa courante) — synchrone via cache
 export function tableConflict(numero, date, service, exceptId) {
   if (isMock) return mockDb.tableConflict(numero, date, service, exceptId);
