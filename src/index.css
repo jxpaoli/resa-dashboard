@@ -67,8 +67,13 @@ body {
 }
 .topbanner__spacer { width: 38px; flex-shrink: 0; }
 .topbanner__notif {
-  position: relative; flex-shrink: 0; cursor: pointer;
+  position: relative; flex-shrink: 0; cursor: pointer; opacity: .5;
   background: transparent; border: none; font-size: 22px; line-height: 1; padding: 4px;
+}
+.topbanner__notif.is-on { opacity: 1; }
+.topbanner__notif.is-on::after {
+  content: ''; position: absolute; top: 2px; right: 2px; width: 9px; height: 9px;
+  border-radius: 50%; background: var(--present); border: 2px solid var(--surface);
 }
 .topbanner__notif:active { transform: scale(.9); }
 .topbanner__notif-count {
