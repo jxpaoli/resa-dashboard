@@ -38,8 +38,14 @@ body {
 }
 
 /* ------------------------------- Layout ---------------------------------- */
-.app { min-height: 100%; display: flex; flex-direction: column; }
+.app { min-height: 100%; display: flex; flex-direction: column; overflow-x: clip; }
 .app__main { flex: 1; }
+/* Animation de changement de page (swipe / clic) */
+@keyframes pageInRight { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
+@keyframes pageInLeft  { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: none; } }
+.page-anim--fwd  { animation: pageInRight .22s ease; }
+.page-anim--back { animation: pageInLeft .22s ease; }
+@media (prefers-reduced-motion: reduce) { .page-anim--fwd, .page-anim--back { animation: none; } }
 /* Connecté : place pour le bandeau haut (56px) et la sidebar (desktop) */
 .app--auth .app__main { padding-top: 56px; }
 @media (min-width: 720px) {

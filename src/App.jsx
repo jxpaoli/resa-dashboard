@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from './context/AuthContext.jsx';
 import AppNav from './components/AppNav.jsx';
@@ -31,6 +31,17 @@ export default function App() {
   const pages = user?.role === 'directeur'
     ? ['/liste', '/tables', '/arrivee', '/clients', '/validation']
     : ['/arrivee'];
+
+  // Sens de l'animation selon la direction de navigation
+  const [dir, setDir] = useState('fwd');
+  const prevIdx = useRef(-1);
+  useEffect(() => {
+    const idx = pages.indexOf(location.pathname);
+    setDir(idx >= 0 && prevIdx.current >= 0 && idx < prevIdx.current ? 'back' : 'fwd');
+    prevIdx.current = idx;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
+
   const onTouchStart = (e) => {
     const t = e.touches[0];
     touch.current = { x: t.clientX, y: t.clientY };
@@ -55,7 +66,8 @@ export default function App() {
       {user && <AppNav user={user} onNew={() => setFormOpen(true)} />}
 
       <main className="app__main" onTouchStart={user ? onTouchStart : undefined} onTouchEnd={user ? onTouchEnd : undefined}>
-        <Routes>
+        <div key={location.pathname} className={`page-anim page-anim--${dir}`}>
+        <Routes location={location}>
           <Route path="/login" element={<Login />} />
           <Route
             path="/arrivee"
@@ -99,6 +111,7 @@ export default function App() {
           />
           <Route path="*" element={<Navigate to={home} replace />} />
         </Routes>
+        </div>
       </main>
 
       {user && formOpen && <FormulaireModal onClose={() => setFormOpen(false)} />}
