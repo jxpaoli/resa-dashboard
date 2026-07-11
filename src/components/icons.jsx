@@ -92,6 +92,17 @@ export function CheckIcon({ className }) {
   );
 }
 
+// Statistiques (histogramme)
+export function StatsIcon({ className }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <rect x="3" y="12" width="4.2" height="8" rx="1.2" />
+      <rect x="9.9" y="7" width="4.2" height="13" rx="1.2" />
+      <rect x="16.8" y="3.5" width="4.2" height="16.5" rx="1.2" />
+    </svg>
+  );
+}
+
 // Déconnexion (sortir)
 export function LogoutIcon({ className }) {
   return (

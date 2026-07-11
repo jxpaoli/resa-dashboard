@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Sprig } from './Logo.jsx';
+import { StatsIcon } from './icons.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 import { enablePush, isPushEnabled, pushAvailable } from '../utils/notifications.js';
 
@@ -10,6 +12,7 @@ export default function TopBanner({ user, onLogout }) {
   const [pushOn, setPushOn] = useState(false);
   const ref = useRef(null);
   const { notify } = useToast();
+  const navigate = useNavigate();
   const isDir = user.role === 'directeur';
 
   useEffect(() => {
@@ -42,6 +45,14 @@ export default function TopBanner({ user, onLogout }) {
           <div className="usermenu" role="menu">
             <div className="usermenu__name">{user.nom}</div>
             <div className="usermenu__role">{user.role}</div>
+            {isDir && (
+              <button
+                className="btn btn--ghost btn--block btn--sm usermenu__link"
+                onClick={() => { setOpen(false); navigate('/stats'); }}
+              >
+                <StatsIcon className="ic-sm" /> Statistiques
+              </button>
+            )}
             <button className="btn btn--ghost btn--block btn--sm" onClick={onLogout}>Déconnexion</button>
           </div>
         )}

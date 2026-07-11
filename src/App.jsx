@@ -12,6 +12,7 @@ import Liste from './pages/Liste.jsx';
 import Tables from './pages/Tables.jsx';
 import Validation from './pages/Validation.jsx';
 import Clients from './pages/Clients.jsx';
+import Stats from './pages/Stats.jsx';
 
 // Toutes les routes, rendues à une "location" donnée (courante ou voisine pour le cube).
 function AppRoutes({ location, home }) {
@@ -23,6 +24,7 @@ function AppRoutes({ location, home }) {
       <Route path="/tables" element={<ProtectedRoute role="directeur"><Tables /></ProtectedRoute>} />
       <Route path="/validation" element={<ProtectedRoute role="directeur"><Validation /></ProtectedRoute>} />
       <Route path="/clients" element={<ProtectedRoute role="directeur"><Clients /></ProtectedRoute>} />
+      <Route path="/stats" element={<ProtectedRoute role="directeur"><Stats /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to={home} replace />} />
     </Routes>
   );
