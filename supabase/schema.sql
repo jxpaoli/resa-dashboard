@@ -52,6 +52,7 @@ create table if not exists reservations (
   remise        text,                          -- 'plein' | '-30%' | '-50%' | null (à définir)
   notes         text,
   numero_table  int,
+  zone          text,                          -- zone de salle : 'T1'..'T4' | 'S1'..'S4' | null
   status        resa_status  not null default 'proposed',
   source        resa_source,
   service       resa_service,

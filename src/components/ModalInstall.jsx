@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { updateReservation, tableConflict } from '../utils/supabase.js';
 import { useToast } from '../context/ToastContext.jsx';
-import { REMISES, serviceFromHeure } from '../utils/constants.js';
+import { REMISES, ZONES, serviceFromHeure } from '../utils/constants.js';
 import { TableIcon } from './icons.jsx';
 
 // Modal d'INSTALLATION (page Arrivée) : ouvert au clic sur « Installé ».
@@ -12,6 +12,7 @@ export default function ModalInstall({ reservation: r, onDone, onClose }) {
   const [couverts, setCouverts] = useState(r.couverts ?? '');
   const [remise, setRemise] = useState(r.remise ?? null);
   const [numero, setNumero] = useState(r.numero_table ?? '');
+  const [zone, setZone] = useState(r.zone ?? null);
   const [saving, setSaving] = useState(false);
   const inputRef = useRef(null);
 
@@ -44,7 +45,7 @@ export default function ModalInstall({ reservation: r, onDone, onClose }) {
       return;
     }
     setSaving(true);
-    await updateReservation(r.id, { presence: 'validated', couverts: cov, remise, numero_table: num });
+    await updateReservation(r.id, { presence: 'validated', couverts: cov, remise, numero_table: num, zone });
     setSaving(false);
     notify(`${r.nom} — installé${num != null ? ` · table ${String(num).padStart(3, '0')}` : ''}`, { type: 'success' });
     onDone?.();
@@ -101,6 +102,22 @@ export default function ModalInstall({ reservation: r, onDone, onClose }) {
               placeholder="ex. 12"
             />
           </label>
+
+          <fieldset className="field">
+            <span className="field__label">Zone</span>
+            <div className="zone-grid">
+              {ZONES.map((z) => (
+                <button
+                  key={z}
+                  type="button"
+                  className={`zone-btn ${zone === z ? 'is-active' : ''}`}
+                  onClick={() => setZone((cur) => (cur === z ? null : z))}
+                >
+                  {z}
+                </button>
+              ))}
+            </div>
+          </fieldset>
 
           {conflit && (
             <div className="warning" role="alert">

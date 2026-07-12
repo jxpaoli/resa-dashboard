@@ -105,6 +105,7 @@ function PlaceTile({ r, onPick }) {
       <button className="place-tile" onClick={() => onPick(r)}>
         <div className="place-tile__top">
           <span className="place-tile__h">{r.heure}</span>
+          {r.zone && <span className="zone-badge">{r.zone}</span>}
           {placed && (
             <span className="place-tile__badge">
               <TableIcon className="ic-sm" />

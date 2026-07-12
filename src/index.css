@@ -603,6 +603,23 @@ textarea.field__input { resize: vertical; }
 .remise-opt.is-active { color: #fff; }
 .remise-undef { font-size: 12px; color: var(--muted); font-weight: 600; }
 
+/* Sélecteur de zone : grille 4×2 de petits carrés (modals table / installation) */
+.zone-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.zone-btn {
+  border: 1.5px solid var(--border); background: var(--surface); color: var(--ink-soft);
+  font-family: inherit; font-weight: 700; font-size: 15px; padding: 12px 0;
+  border-radius: 10px; cursor: pointer; transition: all .12s ease;
+}
+.zone-btn:hover { border-color: var(--primary); }
+.zone-btn.is-active {
+  background: var(--primary); color: var(--primary-ink); border-color: var(--primary);
+}
+/* badge zone sur la tuile du Plan */
+.zone-badge {
+  display: inline-flex; align-items: center; background: var(--primary); color: var(--primary-ink);
+  font-weight: 700; font-size: 11px; padding: 2px 8px; border-radius: 999px;
+}
+
 /* ------------------------------- Filtres / onglets ----------------------- */
 .filters { display: flex; align-items: flex-end; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
 .seg { display: inline-flex; background: #e8e0cf; border-radius: 12px; padding: 3px; }

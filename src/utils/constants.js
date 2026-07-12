@@ -8,6 +8,10 @@ export const REMISES = [
 
 export const REMISE_INDEFINIE = { label: 'À définir', color: '#9ca3af' }; // Gris
 
+// Zones de salle (grille 4×2 de petits carrés dans les modals table/installation).
+// En dur pour l'instant — T = terrasse, S = salle. À ajuster ici si besoin.
+export const ZONES = ['T1', 'T2', 'T3', 'T4', 'S1', 'S2', 'S3', 'S4'];
+
 export function remiseMeta(value) {
   return REMISES.find((r) => r.value === value) || null;
 }

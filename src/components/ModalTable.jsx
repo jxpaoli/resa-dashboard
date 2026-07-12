@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { updateReservation, tableConflict } from '../utils/supabase.js';
 import { useToast } from '../context/ToastContext.jsx';
-import { REMISES } from '../utils/constants.js';
+import { REMISES, ZONES } from '../utils/constants.js';
 
 // Modal SERVICE (page Plan) : gère la REMISE + le N° de TABLE.
 // Warning non bloquant si le n° de table est déjà pris (même date + service).
@@ -9,6 +9,7 @@ export default function ModalTable({ reservation, onClose }) {
   const { notify } = useToast();
   const [numero, setNumero] = useState(reservation.numero_table ?? '');
   const [remise, setRemise] = useState(reservation.remise ?? null);
+  const [zone, setZone] = useState(reservation.zone ?? null);
   const [saving, setSaving] = useState(false);
   const inputRef = useRef(null);
 
@@ -36,7 +37,7 @@ export default function ModalTable({ reservation, onClose }) {
       return;
     }
     setSaving(true);
-    await updateReservation(reservation.id, { numero_table: num, remise });
+    await updateReservation(reservation.id, { numero_table: num, remise, zone });
     setSaving(false);
     notify(`${reservation.nom} — service mis à jour`, { type: 'success' });
     onClose();
@@ -81,6 +82,22 @@ export default function ModalTable({ reservation, onClose }) {
               placeholder="ex. 12"
             />
           </label>
+
+          <fieldset className="field">
+            <span className="field__label">Zone</span>
+            <div className="zone-grid">
+              {ZONES.map((z) => (
+                <button
+                  key={z}
+                  type="button"
+                  className={`zone-btn ${zone === z ? 'is-active' : ''}`}
+                  onClick={() => setZone((cur) => (cur === z ? null : z))}
+                >
+                  {z}
+                </button>
+              ))}
+            </div>
+          </fieldset>
 
           {conflit && (
             <div className="warning" role="alert">
