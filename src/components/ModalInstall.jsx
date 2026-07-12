@@ -98,7 +98,7 @@ export default function ModalInstall({ reservation: r, onDone, onClose }) {
               inputMode="numeric"
               className="field__input field__input--big"
               value={numero}
-              onChange={(e) => setNumero(e.target.value)}
+              onChange={(e) => { const v = e.target.value; setNumero(v); if (v !== '') setZone(null); }}
               placeholder="ex. 12"
             />
           </label>
@@ -111,7 +111,7 @@ export default function ModalInstall({ reservation: r, onDone, onClose }) {
                   key={z}
                   type="button"
                   className={`zone-btn ${zone === z ? 'is-active' : ''}`}
-                  onClick={() => setZone((cur) => (cur === z ? null : z))}
+                  onClick={() => setZone((cur) => { const next = cur === z ? null : z; if (next) setNumero(''); return next; })}
                 >
                   {z}
                 </button>
