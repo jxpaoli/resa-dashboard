@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 import { TableIcon, CouvertIcon } from '../components/icons.jsx';
 import ModalArrivee from '../components/ModalArrivee.jsx';
+import ModalInstall from '../components/ModalInstall.jsx';
 import DateStepper from '../components/DateStepper.jsx';
 
 const pad = (n) => String(n).padStart(2, '0');
@@ -36,6 +37,7 @@ export default function Arrivee() {
   const { isDirecteur } = useAuth();
   const { notify } = useToast();
   const [picked, setPicked] = useState(null);
+  const [installing, setInstalling] = useState(null);
   const [service, setService] = useState(() => (new Date().getHours() < 16 ? 'midi' : 'soir'));
   const [date, setDate] = useState(today());
 
@@ -76,7 +78,7 @@ export default function Arrivee() {
       ) : (
         <div className="arr2-list">
           {ordered.map((r) => (
-            <ArrTile key={r.id} r={r} onOpen={setPicked} onInstall={(x) => setPresence(x, 'validated')} />
+            <ArrTile key={r.id} r={r} onOpen={setPicked} onInstall={setInstalling} />
           ))}
         </div>
       )}
@@ -85,8 +87,19 @@ export default function Arrivee() {
         <ModalArrivee
           reservation={picked}
           isDirecteur={isDirecteur}
-          onAction={async (presence) => { await setPresence(picked, presence); setPicked(null); }}
+          onAction={async (presence) => {
+            if (presence === 'validated') { setInstalling(picked); setPicked(null); return; }
+            await setPresence(picked, presence);
+            setPicked(null);
+          }}
           onClose={() => setPicked(null)}
+        />
+      )}
+
+      {installing && (
+        <ModalInstall
+          reservation={installing}
+          onClose={() => setInstalling(null)}
         />
       )}
     </div>
