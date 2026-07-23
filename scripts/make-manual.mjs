@@ -253,18 +253,157 @@ function drawPlan(w) {
   const zone = (zx, title, tiles, accent) => {
     doc.font('Helvetica-Bold').fontSize(7.5).fillColor(accent).text(title, zx, y, { width: colW, align: 'center', characterSpacing: 0.5 });
     let ty = y + 13;
-    tiles.forEach(([n, c, tb]) => {
+    tiles.forEach(([n, c, tb, z]) => {
       const th = 40;
       rr(zx + colW - 7, ty + 3, 6, th - 6, 3).fill(accent);
       rr(zx, ty, colW - 9, th, 7).fill(C.tile); rr(zx, ty, colW - 9, th, 7).lineWidth(0.7).stroke(C.border);
       tbox(n, zx + 7, ty + 4, colW - 20, 14, { font: 'Helvetica-Bold', size: 8, color: C.ink });
       bwBadge(zx + 7, ty + 19, c);
-      bwBadge(zx + colW - 34, ty + 19, tb);
+      if (z) {
+        const cw2 = 24;
+        rr(zx + colW - 9 - cw2 - 4, ty + 20, cw2, 14, 7).fill(C.teal);
+        tbox(z, zx + colW - 9 - cw2 - 4, ty + 20, cw2, 14, { font: 'Helvetica-Bold', size: 7.5, color: '#fff', align: 'center' });
+      } else if (tb) {
+        bwBadge(zx + colW - 34, ty + 19, tb);
+      }
       ty += th + 6;
     });
   };
-  zone(10, '–30 %', [['Mme Dupont', '4', '12'], ['Famille Sart', '5', '15']], C.gold);
-  zone(20 + colW, 'PLEIN TARIF', [['M. Bernard', '2', '07'], ['M. Léon', '2', '09']], C.teal);
+  zone(10, '–30 %', [['Mme Dupont', '4', '12'], ['Famille Sart', '5', '', 'T2']], C.gold);
+  zone(20 + colW, 'PLEIN TARIF', [['M. Bernard', '2', '07'], ['M. Léon', '2', '', 'S1']], C.teal);
+}
+
+// Grille de zones 4×2 (T1–T4 / S1–S4) — relative à l'origine courante.
+function zoneGrid(x, y, cellW, cellH, gap, active) {
+  const labels = ['T1', 'T2', 'T3', 'T4', 'S1', 'S2', 'S3', 'S4'];
+  labels.forEach((z, i) => {
+    const zx = x + (i % 4) * (cellW + gap);
+    const zy = y + Math.floor(i / 4) * (cellH + gap);
+    const sel = z === active;
+    if (sel) {
+      rr(zx, zy, cellW, cellH, 5).fill(C.teal);
+      tbox(z, zx, zy, cellW, cellH, { font: 'Helvetica-Bold', size: 8, color: '#fff', align: 'center' });
+    } else {
+      rr(zx, zy, cellW, cellH, 5).fill('#fff');
+      rr(zx, zy, cellW, cellH, 5).lineWidth(0.8).stroke(C.border);
+      tbox(z, zx, zy, cellW, cellH, { font: 'Helvetica-Bold', size: 8, color: C.sub, align: 'center' });
+    }
+  });
+}
+
+// ---- MODAL D'INSTALLATION (clic « Installé » sur Arrivée) ----
+function drawInstallModal(w) {
+  doc.rect(0, 0, w, 400).fill('#e9e3d5');
+  const mx = 8, mw = w - 16, my = 20;
+  rr(mx, my, mw, 344, 14).fill('#fff'); rr(mx, my, mw, 344, 14).lineWidth(1).stroke(C.border);
+  let y = my + 16;
+  doc.font('Times-Bold').fontSize(13).fillColor(C.ink).text('Mme Dupont', mx + 14, y, { lineBreak: false });
+  y += 17;
+  doc.font('Helvetica').fontSize(7.5).fillColor(C.sub).text('20:00 · installation', mx + 14, y, { lineBreak: false });
+  y += 17;
+  const lab = (t, yy) => doc.font('Helvetica-Bold').fontSize(7).fillColor(C.sub).text(t.toUpperCase(), mx + 14, yy, { characterSpacing: 0.6, lineBreak: false });
+  // couverts
+  lab('Couverts', y); y += 11;
+  rr(mx + 14, y, mw - 28, 18, 6).fill('#fff'); rr(mx + 14, y, mw - 28, 18, 6).lineWidth(0.8).stroke(C.border);
+  tbox('4', mx + 14, y, mw - 28, 18, { font: 'Helvetica-Bold', size: 9, color: C.ink, align: 'center' });
+  y += 25;
+  // remise
+  lab('Remise', y); y += 11;
+  pill(mx + 14, y, 42, 16, 'Plein', false);
+  rr(mx + 60, y, 46, 16, 8).fill('#f2e6c9'); tbox('–30 %', mx + 60, y, 46, 16, { font: 'Helvetica-Bold', size: 7, color: C.ocre, align: 'center' });
+  pill(mx + 110, y, 44, 16, '–50 %', false);
+  y += 24;
+  // n° table (mis en avant)
+  lab('N° table', y); y += 11;
+  rr(mx + 14, y, mw - 28, 26, 7).fill('#fff'); rr(mx + 14, y, mw - 28, 26, 7).lineWidth(1.2).stroke(C.teal);
+  tbox('12', mx + 14, y, mw - 28, 26, { font: 'Helvetica-Bold', size: 14, color: C.ink, align: 'center' });
+  y += 34;
+  // zone (exclusive du numéro)
+  lab('Zone', y); y += 11;
+  const cellW = (mw - 28 - 3 * 6) / 4;
+  zoneGrid(mx + 14, y, cellW, 17, 6, null);
+  y += 17 * 2 + 6 + 12;
+  // valider
+  rr(mx + 14, y, mw - 28, 24, 8).fill(C.teal);
+  tbox('Valider l’installation', mx + 14, y, mw - 28, 24, { font: 'Helvetica-Bold', size: 8.5, color: '#fff', align: 'center' });
+}
+
+// ---- STATISTIQUES ----
+function drawStats(w) {
+  mBanner(w);
+  let y = 40;
+  doc.font('Times-Bold').fontSize(11).fillColor(C.ink).text('Statistiques', 10, y, { lineBreak: false });
+  y += 17;
+  const kpis = [
+    ['Couverts auj.', '86', 'Midi 32 · Soir 54'],
+    ['Résa du jour', '9', 'tables attendues'],
+    ['7 prochains j.', '612', '~87 / jour'],
+    ['À valider', '2', 'en attente'],
+  ];
+  const gw = (w - 30) / 2, gh = 44;
+  kpis.forEach((kk, i) => {
+    const kx = 10 + (i % 2) * (gw + 10);
+    const ky = y + Math.floor(i / 2) * (gh + 8);
+    const alert = kk[0] === 'À valider';
+    rr(kx, ky, gw, gh, 8).fill(alert ? '#fbeee9' : C.tile);
+    rr(kx, ky, gw, gh, 8).lineWidth(0.7).stroke(alert ? C.brique : C.border);
+    doc.font('Helvetica-Bold').fontSize(6).fillColor(C.sub).text(kk[0].toUpperCase(), kx + 8, ky + 6, { characterSpacing: 0.4, lineBreak: false });
+    doc.font('Times-Bold').fontSize(17).fillColor(alert ? C.brique : C.ink).text(kk[1], kx + 8, ky + 15, { lineBreak: false });
+    doc.font('Helvetica').fontSize(6).fillColor(C.sub).text(kk[2], kx + 8, ky + 35, { width: gw - 14, lineBreak: false });
+  });
+  y += gh * 2 + 8 + 12;
+  // jauge remplissage
+  rr(10, y, w - 20, 40, 8).fill('#fff'); rr(10, y, w - 20, 40, 8).lineWidth(0.7).stroke(C.border);
+  doc.font('Helvetica-Bold').fontSize(7).fillColor(C.ink).text('Remplissage du jour', 18, y + 8, { lineBreak: false });
+  doc.font('Helvetica').fontSize(6.5).fillColor(C.sub).text('86 / 145', 18, y + 8, { width: w - 36, align: 'right', lineBreak: false });
+  rr(18, y + 22, w - 36, 8, 4).fill('#ece5d6');
+  rr(18, y + 22, (w - 36) * 0.59, 8, 4).fill(C.teal);
+  y += 50;
+  // graphe couverts / jour
+  rr(10, y, w - 20, 92, 8).fill('#fff'); rr(10, y, w - 20, 92, 8).lineWidth(0.7).stroke(C.border);
+  doc.font('Helvetica-Bold').fontSize(7).fillColor(C.ink).text('Couverts par jour', 18, y + 8, { lineBreak: false });
+  doc.font('Helvetica').fontSize(6).fillColor(C.teal).text('■ Midi', w - 74, y + 9, { lineBreak: false });
+  doc.font('Helvetica').fontSize(6).fillColor(C.gold).text('■ Soir', w - 42, y + 9, { lineBreak: false });
+  const bx0 = 18, by0 = y + 26, bH = 48, n = 10;
+  const bw = (w - 36) / n;
+  const vals = [0.9, 0.6, 0.78, 0.5, 1.0, 0.7, 0.85, 0.55, 0.42, 0.66];
+  vals.forEach((v, i) => {
+    const bx = bx0 + i * bw;
+    const hh = bH * v;
+    const midi = hh * 0.4, soir = hh - midi;
+    rr(bx + 1, by0 + bH - hh, bw - 3, soir, 1.5).fill(C.gold);
+    rr(bx + 1, by0 + bH - midi, bw - 3, midi, 1.5).fill(C.teal);
+  });
+  doc.font('Helvetica-Bold').fontSize(5.5).fillColor(C.teal).text('auj.', bx0, by0 + bH + 3, { lineBreak: false });
+}
+
+// ---- PARTAGE SAFARI (« Sur l'écran d'accueil ») ----
+function drawShareSheet(w) {
+  doc.rect(0, 0, w, 400).fill(C.cream);
+  mBanner(w);
+  const py = 132, ph = 400 - py;
+  rr(0, py, w, ph, 16).fill('#f5f2ea');
+  rr(w / 2 - 16, py + 8, 32, 4, 2).fill('#cfc7b5');
+  doc.font('Helvetica-Bold').fontSize(8).fillColor(C.ink).text('Aux Terrasses de Troinex', 14, py + 20, { lineBreak: false });
+  doc.font('Helvetica').fontSize(6.5).fillColor(C.sub).text('t2t.master.corsica', 14, py + 32, { lineBreak: false });
+  doc.moveTo(10, py + 48).lineTo(w - 10, py + 48).lineWidth(0.6).stroke(C.border);
+  const row = (ry, label, icon, hi) => {
+    if (hi) rr(8, ry - 3, w - 16, 24, 7).fill('#eaf1ec');
+    rr(14, ry, 18, 18, 4).fill('#fff'); rr(14, ry, 18, 18, 4).lineWidth(0.8).stroke(hi ? C.teal : C.border);
+    if (icon === 'plus') {
+      doc.save().lineWidth(1.5).strokeColor(hi ? C.teal : C.ink).lineCap('round')
+         .moveTo(19, ry + 9).lineTo(27, ry + 9).moveTo(23, ry + 5).lineTo(23, ry + 13).stroke().restore();
+    } else if (icon === 'star') {
+      doc.save().lineWidth(1).strokeColor(C.sub).circle(23, ry + 9, 5).stroke().restore();
+    } else {
+      doc.save().lineWidth(1).strokeColor(C.sub).rect(19, ry + 5, 8, 9).stroke().restore();
+    }
+    doc.font(hi ? 'Helvetica-Bold' : 'Helvetica').fontSize(8.5).fillColor(C.ink).text(label, 40, ry + 4, { lineBreak: false });
+  };
+  let ry = py + 60;
+  row(ry, 'Copier', 'copy', false); ry += 30;
+  row(ry, 'Ajouter aux favoris', 'star', false); ry += 30;
+  row(ry, 'Sur l’écran d’accueil', 'plus', true);
 }
 
 // ---- ARRIVÉE ----
@@ -364,7 +503,7 @@ y += ch * 2 + 16 + 22;
 
 // bandeau chiffres
 rr(M, y, CW, 62, 12).fill(C.teal);
-const stats = [['6', 'écrans métier'], ['2', 'profils : directeur & staff'], ['1', 'appli, tous vos appareils'], ['0', 'papier, 0 double-saisie']];
+const stats = [['7', 'écrans métier'], ['2', 'profils : directeur & staff'], ['1', 'appli, tous vos appareils'], ['0', 'papier, 0 double-saisie']];
 const sw = CW / stats.length;
 stats.forEach((s, i) => {
   const sx = M + i * sw;
@@ -397,8 +536,8 @@ const half = (CW - 18) / 2;
 roleCard(M, half, 'Directeur', C.teal, [
   'Accès complet : Liste, Plan, Arrivée, Clients, À valider.',
   'Valide ou refuse les réservations proposées par le staff.',
-  'Applique les remises et attribue les tables.',
-  'Reçoit les notifications push.',
+  'Applique remises, tables et zones de salle.',
+  'Statistiques (via son badge) et notifications push.',
 ]);
 roleCard(M + half + 18, half, 'Staff / Salle', C.olive, [
   'Vue « Arrivée » simplifiée, centrée sur le service.',
@@ -409,7 +548,7 @@ roleCard(M + half + 18, half, 'Staff / Salle', C.olive, [
 y += 150 + 22;
 
 kicker('La barre de navigation', M, y, C.gold); y += 16;
-y = para('Sur téléphone, tout est au pouce : le bouton + à gauche pour créer, les écrans au centre, et « Valider » à droite avec une pastille rouge qui compte les réservations en attente. Sur ordinateur, la même navigation passe dans une colonne latérale.', M, y, CW, { size: 10.5, lineGap: 3.4 });
+y = para('Sur téléphone, tout est au pouce : le bouton + à gauche pour créer, les écrans au centre, et « Valider » à droite avec une pastille rouge qui compte les réservations en attente. On glisse aussi le doigt pour passer d’un écran à l’autre (effet cube 3D). Le badge rond en haut à gauche ouvre les Statistiques et la déconnexion. Sur ordinateur, la même navigation passe dans une colonne latérale.', M, y, CW, { size: 10.5, lineGap: 3.4 });
 y += 12;
 
 // nav bar illustration
@@ -488,37 +627,53 @@ featurePage(
 // PAGE 6 — Plan de salle
 featurePage(
   'Écran · Plan',
-  'Placer la salle, zone par zone',
-  'Le Plan répartit les réservations du service par zone de remise. On visualise l’occupation et on attribue les tables en un geste.',
+  'Placer la salle, table ou zone',
+  'Le Plan répartit les réservations du service par remise. On visualise l’occupation et on place chaque table en un geste — par numéro précis ou par zone de salle.',
   [
     'Deux colonnes claires, triées par nombre de couverts décroissant.',
-    'Chaque tuile rappelle le nom, les couverts et le numéro de table.',
     'À l’ouverture d’une fiche, le numéro de table est déjà sélectionné.',
-    'Date et service se règlent en haut, au « – / + ».',
+    'Sous le numéro, une grille de 8 zones : T1–T4 (terrasse) · S1–S4 (salle).',
+    'Numéro OU zone, jamais les deux : choisir l’un efface l’autre.',
   ],
   'Exemple concret',
-  'Service du soir : la grande tablée de 8 (Entreprise Roca) s’affiche en tête de colonne. Vous ouvrez, la table est pré-remplie, vous confirmez le placement. Suivant.',
-  'Les plus grosses tables remontent d’elles-mêmes : vous placez le plus difficile en premier.',
+  'Une table de 2 sans emplacement fixe ? Vous ne mettez pas de numéro : un tap sur « T2 » et c’est réglé. Le vrai numéro se posera plus tard, à l’arrivée, si besoin.',
+  'La zone dit OÙ, le numéro dit LAQUELLE : vous placez au feeling et affinez seulement quand c’est utile.',
   drawPlan, 6, C.gold);
 
 // PAGE 7 — Arrivée
 featurePage(
   'Écran · Arrivée',
-  'Le service, sans stylo',
-  'L’écran Arrivée est fait pour l’instant du service : la liste des attendus, classée par ordre alphabétique, prête à pointer.',
+  'Installer un client en un geste',
+  'L’écran Arrivée est fait pour l’instant du service : la liste des attendus, classée par nom. Un appui sur « Installé » ouvre un récapitulatif éclair, prêt à confirmer.',
   [
-    'Bascule Midi / Soir ; par défaut, le bon service selon l’heure.',
-    'Grandes tuiles lisibles : nom et table en gros.',
-    'Un bouton « Installé » pour pointer l’arrivée d’un geste.',
-    'Les clients installés passent en bas, grisés — la liste reste nette.',
+    'Le récap s’ouvre : nom, couverts, remise et n° de table.',
+    'Le numéro est déjà pré-rempli et sélectionné : à retaper seulement si besoin.',
+    'La grille des zones (T1–T4 / S1–S4) est là aussi, sous le numéro.',
+    'Un tap sur « Valider » : le client est installé et tout est enregistré.',
   ],
   'Exemple concret',
-  'La famille Bernard arrive. Le staff appuie sur « Installé » : la tuile file en bas de liste, grisée. En un regard, on sait qui est là et qui reste attendu.',
-  'Pensé pour le staff : aucune formation, un seul bouton pour l’essentiel.',
-  drawArrivee, 7, C.olive);
+  'Mme Dupont arrive. « Installé » → le récap affiche 4 couverts, –30 %, table 12. Ce n’est pas la bonne table ? Vous tapez « 08 », validez. Installée, table changée, en base — d’un geste.',
+  'Le même geste pointe l’arrivée ET corrige la table : plus besoin de repasser par le Plan.',
+  drawInstallModal, 7, C.olive);
+
+// PAGE 8 — Statistiques
+featurePage(
+  'Écran · Statistiques',
+  'Votre salle en chiffres, en direct',
+  'Un tableau de bord réservé au directeur, ouvert depuis le badge rond en haut à gauche. Tout se calcule tout seul à partir des réservations validées.',
+  [
+    'Tuiles clés : couverts du jour (midi / soir), réservations, 7 prochains jours, demandes à valider.',
+    'Jauge de remplissage du jour, sur une capacité de référence de 145 couverts.',
+    'Graphe des couverts par jour sur 14 jours, midi et soir empilés.',
+    'Répartition des remises et des provenances (TheFork, Wix, directeur, staff).',
+  ],
+  'Exemple concret',
+  'D’un coup d’œil le matin : 86 couverts prévus, dont 54 le soir, remplissage à 59 %. La semaine s’annonce à ~87 couverts/jour. Vous ajustez le personnel en conséquence.',
+  'Aucune saisie : les chiffres naissent des réservations. Réservé au directeur, via son badge.',
+  drawStats, 8, C.teal);
 
 // =========================================================
-// PAGE 8 — Valider · Clients · Notifications
+// PAGE 9 — Valider · Clients · Notifications (illustration : liste Arrivée)
 // =========================================================
 doc.addPage();
 sectionHeader('Trois atouts', 'Valider, fidéliser, être alerté');
@@ -551,10 +706,10 @@ doc.font('Times-Italic').fontSize(12.5).fillColor(C.ink)
       rx, iy + 20, { width: rw, lineGap: 4 });
 doc.font('Helvetica-Bold').fontSize(9).fillColor(C.teal)
    .text('— Le temps réel, concrètement.', rx, doc.y + 8, { width: rw });
-footer(8);
+footer(9);
 
 // =========================================================
-// PAGE 9 — Ce qui simplifie la vie + Roadmap
+// PAGE 10 — Ce qui simplifie la vie + Roadmap
 // =========================================================
 doc.addPage();
 sectionHeader('En résumé', 'Ce qui vous simplifie la vie');
@@ -602,10 +757,60 @@ road('Connexion aux plateformes (TheFork, Wix…)', 'En cours de développement'
   'Les réservations prises en ligne tomberont directement dans votre agenda, sans aucune ressaisie. Une seule liste, quelle que soit la provenance.');
 road('Envoi de SMS et appel depuis l’application', 'Option disponible', C.teal,
   'Confirmez une réservation par SMS, ou appelez le client d’un geste depuis sa fiche — sans jamais quitter l’application ni chercher son numéro.');
-footer(9);
+footer(10);
 
 // =========================================================
-// PAGE 10 — Clôture
+// PAGE 11 — Installer sur iPhone & notifications
+// =========================================================
+function stepBlock(x, y, w, num, title, body, color) {
+  doc.save().circle(x + 10, y + 10, 10).fill(color).restore();
+  doc.font('Helvetica-Bold').fontSize(10).fillColor('#fff').text(String(num), x, y + 4.5, { width: 20, align: 'center', lineBreak: false });
+  doc.font('Helvetica-Bold').fontSize(10.5).fillColor(C.ink).text(title, x + 28, y + 1, { width: w - 28, lineBreak: false });
+  const yy = para(body, x + 28, y + 15, w - 28, { size: 9, lineGap: 2.4 });
+  return yy + 10;
+}
+
+doc.addPage();
+sectionHeader('Mode d’emploi', 'Installer sur iPhone & recevoir les alertes');
+let gy = 122;
+gy = para('L’application est une « web-app » : ni store, ni téléchargement. En quelques touches, elle s’installe sur l’écran d’accueil comme une vraie appli — et le directeur peut activer les notifications push.', M, gy, CW, { size: 11, lineGap: 3.6 });
+gy += 14;
+
+const gCol = 294;
+kicker('1 · Ajouter à l’écran d’accueil', M, gy, C.teal);
+let sy = gy + 18;
+[
+  ['Ouvrez Safari', 'Sur iPhone, utilisez Safari : les autres navigateurs ne proposent pas l’installation.'],
+  ['Allez sur t2t.master.corsica', 'Saisissez l’adresse, puis connectez-vous une première fois.'],
+  ['Bouton Partager', 'Touchez l’icône Partager (un carré avec une flèche vers le haut), en bas de l’écran.'],
+  ['« Sur l’écran d’accueil »', 'Faites défiler la liste des actions et touchez « Sur l’écran d’accueil ».'],
+  ['Ajouter', 'Touchez « Ajouter » en haut à droite : l’icône se pose sur votre écran d’accueil.'],
+].forEach((s, i) => { sy = stepBlock(M, sy, gCol, i + 1, s[0], s[1], C.teal); });
+
+phone(M + gCol + 16, gy + 6, 172, 300, drawShareSheet);
+
+let gyB = Math.max(sy, gy + 6 + 300) + 16;
+kicker('2 · Activer les notifications (directeur)', M, gyB, C.olive);
+const nsteps = [
+  ['Installez d’abord l’app', 'Indispensable sur iPhone : les notifications ne fonctionnent que depuis l’app ajoutée à l’écran d’accueil (iOS 16.4 ou plus récent).'],
+  ['Ouvrez-la par son icône', 'Lancez l’application depuis l’icône de l’écran d’accueil, puis connectez-vous en directeur.'],
+  ['Touchez la cloche 🔔', 'En haut à droite du bandeau. Autorisez les notifications quand iOS le demande.'],
+  ['C’est actif', 'La cloche affiche un point vert. Vous êtes alerté à chaque réservation proposée par le staff, même l’app fermée.'],
+];
+const bcw = (CW - 20) / 2;
+nsteps.forEach((s, i) => {
+  const bx = M + (i % 2) * (bcw + 20);
+  const by = gyB + 18 + Math.floor(i / 2) * 66;
+  stepBlock(bx, by, bcw, i + 1, s[0], s[1], C.olive);
+});
+const cy = gyB + 18 + 2 * 66 + 6;
+callout(M, cy, CW, 'Bon à savoir',
+  'Pour couper ou régler les alertes plus tard : Réglages iOS › Notifications › Aux Terrasses de Troinex. Tant que rien n’est activé, la cloche reste grise ; elle passe au vert une fois les notifications prêtes.',
+  C.gold, C.tintGold);
+footer(11);
+
+// =========================================================
+// PAGE 12 — Clôture
 // =========================================================
 doc.addPage();
 fillPage(C.cream);
